@@ -9,6 +9,20 @@
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-512.png">
 <style>
+
+.tab {
+    display: none;      /* Start hidden */
+    opacity: 0;
+    transform: translateY(15px);
+    transition: 0.3s;
+}
+
+.tab.show {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
 :root {
     --bg: #f5f7fa;
     --card: #ffffff;
