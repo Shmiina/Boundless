@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaderboard</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    :root {
+      --bg: #0d1117; --card: #161b22; --text: #e6edf3; --accent: #58a6ff;
+    }
+    body { background: var(--bg); color: var(--text); font-family:"Inter",sans-serif; padding:20px;}
+    h2 { text-align:center; margin-bottom:20px;}
+    .nav { display:flex; justify-content:center; margin-bottom:20px; gap:20px;}
+    .nav button { padding:10px 16px; border:none; border-radius:10px; cursor:pointer; background:var(--accent); color:#fff; font-weight:bold;}
+    .nav button.active { background:#1f6feb; }
+    .leaderboard { display:flex; flex-direction:column; gap:10px; max-width:500px; margin:0 auto;}
+    .player { display:flex; justify-content:space-between; padding:12px 18px; background:var(--card); border-radius:12px; }
+  </style>
+</head>
+<body>
+  <h2>Leaderboard</h2>
+  <div class="nav">
+    <button id="namiBtn" class="active" onclick="loadLeaderboard('Nami')">Nami</button>
+    <button id="piaBtn" onclick="loadLeaderboard('Pia')">Pia</button>
+  </div>
+  <div id="leaderboard" class="leaderboard"></div>
+
+<script>
+const apiUrl = "YOUR_WEB_APP_URL_HERE";
+
+async function loadLeaderboard(char) {
+  document.getElementById('leaderboard').innerHTML = "Loading...";
+  // Highlight active button
+  document.getElementById('namiBtn').classList.toggle('active', char==='Nami');
+  document.getElementById('piaBtn').classList.toggle('active', char==='Pia');
+
+  try {
+    const res = await fetch(`${apiUrl}?leaderboard=${char}`);
+    const data = await res.json();
+    const lbDiv = document.getElementById('leaderboard');
+
+    if(data.length===0){
+      lbDiv.innerHTML="No players found.";
+      return;
+    }
+
+    lbDiv.innerHTML = "";
+    data.forEach((p,i)=>{
+      const div = document.createElement('div');
+      div.className='player';
+      div.innerHTML = `<span>#${i+1} ${p.name}</span><span>${p.hours} hours</span>`;
+      lbDiv.appendChild(div);
+    });
+  } catch(err){
+    document.getElementById('leaderboard').innerHTML = "Error fetching leaderboard.";
+  }
+}
+
+// Load Nami by default
+loadLeaderboard('Nami');
+</script>
+</body>
+</html>

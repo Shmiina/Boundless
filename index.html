@@ -1,222 +1,141 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Player Hours Lookup</title>
-
-    <!-- PWA REQUIREMENTS -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0d1117">
-    <link rel="icon" href="icon-192.png">
-    <link rel="apple-touch-icon" href="icon-512.png">
-
-    <style>
-        /* ============================
-           LIGHT + DARK MODE THEMES
-        ============================ */
-        :root {
-            --bg: #f5f7fa;
-            --card: #ffffff;
-            --text: #111;
-            --accent: #1a73e8;
-            --accent-hover: #1558b8;
-            --danger: #d93025;
-        }
-
-        [data-theme="dark"] {
-            --bg: #0d1117;
-            --card: #161b22;
-            --text: #e6edf3;
-            --accent: #58a6ff;
-            --accent-hover: #1f6feb;
-            --danger: #ff7b72;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: "Inter", "Segoe UI", sans-serif;
-        }
-
-        body {
-            background: var(--bg);
-            color: var(--text);
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 25px;
-            transition: background 0.3s, color 0.3s;
-        }
-
-        .app-card {
-            background: var(--card);
-            width: 100%;
-            max-width: 420px;
-            padding: 35px 28px;
-            border-radius: 22px;
-            box-shadow: 0 0 25px rgba(0,0,0,0.15);
-            animation: fadeIn 0.4s ease;
-            text-align: center;
-            transition: background 0.3s;
-            position: relative;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .title {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 25px;
-        }
-
-        .toggle {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            cursor: pointer;
-            font-size: 20px;
-        }
-
-        .input-box {
-            width: 100%;
-            padding: 16px;
-            background: var(--bg);
-            border: 2px solid #ccc;
-            border-radius: 14px;
-            color: var(--text);
-            font-size: 17px;
-            outline: none;
-            margin-bottom: 18px;
-        }
-
-        .input-box:focus {
-            border-color: var(--accent);
-        }
-
-        .app-btn {
-            width: 100%;
-            padding: 16px;
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            border-radius: 14px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.25s;
-        }
-
-        .app-btn:hover {
-            background: var(--accent-hover);
-            transform: scale(1.02);
-        }
-
-        .result-box {
-            margin-top: 25px;
-            font-size: 20px;
-            font-weight: 600;
-            color: var(--text);
-            min-height: 25px;
-        }
-
-        .error {
-            color: var(--danger);
-        }
-
-        /* LOADING SPINNER */
-        .spinner {
-            border: 4px solid rgba(255,255,255,0.2);
-            border-top: 4px solid var(--accent);
-            border-radius: 50%;
-            width: 36px;
-            height: 36px;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Player Hours App</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d1117">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-512.png">
+<style>
+:root {
+    --bg: #f5f7fa;
+    --card: #ffffff;
+    --text: #111;
+    --accent: #1a73e8;
+    --accent-hover: #1558b8;
+    --danger: #d93025;
+}
+[data-theme="dark"] {
+    --bg: #0d1117;
+    --card: #161b22;
+    --text: #e6edf3;
+    --accent: #58a6ff;
+    --accent-hover: #1f6feb;
+    --danger: #ff7b72;
+}
+* {margin:0; padding:0; box-sizing:border-box; font-family:"Inter","Segoe UI",sans-serif;}
+body {background:var(--bg); color:var(--text); height:100vh; display:flex; justify-content:center; align-items:center; padding:20px; transition:0.3s;}
+.app-card {background:var(--card); width:100%; max-width:420px; border-radius:22px; padding:28px; box-shadow:0 0 25px rgba(0,0,0,0.15); position:relative; transition:0.3s; overflow:hidden;}
+.title {font-size:28px; font-weight:700; margin-bottom:20px; text-align:center;}
+.toggle {position:absolute; top:20px; right:20px; cursor:pointer; font-size:20px;}
+.nav {display:flex; justify-content:center; gap:10px; margin-bottom:20px;}
+.nav button {padding:10px 14px; border:none; border-radius:10px; cursor:pointer; font-weight:bold; background:var(--accent); color:#fff; transition:0.2s;}
+.nav button.active {background:var(--accent-hover);}
+.input-box {width:100%; padding:16px; border-radius:14px; border:2px solid #ccc; font-size:16px; margin-bottom:15px; background:var(--bg); color:var(--text); outline:none;}
+.input-box:focus {border-color:var(--accent);}
+.app-btn {width:100%; padding:16px; border:none; border-radius:14px; font-size:18px; font-weight:bold; background:var(--accent); color:#fff; cursor:pointer; transition:0.2s;}
+.app-btn:hover {background:var(--accent-hover);}
+.result-box {margin-top:20px; font-size:18px; min-height:25px; text-align:center;}
+.error {color:var(--danger);}
+.leaderboard {display:flex; flex-direction:column; gap:10px;}
+.player {display:flex; justify-content:space-between; padding:12px 18px; background:var(--card); border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.1);}
+.spinner {border:4px solid rgba(255,255,255,0.2); border-top:4px solid var(--accent); border-radius:50%; width:36px; height:36px; animation:spin 0.8s linear infinite; margin:20px auto;}
+@keyframes spin {0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+.fade {opacity:0; transform:translateY(15px); transition:0.3s;}
+.show {opacity:1; transform:translateY(0);}
+</style>
 </head>
 <body data-theme="dark">
-
 <div class="app-card">
     <div class="toggle" onclick="toggleTheme()">🌙</div>
+    <div class="nav">
+        <button id="tabLookup" class="active" onclick="showTab('lookup')">Lookup</button>
+        <button id="tabLeaderboard" onclick="showTab('leaderboard')">Leaderboard</button>
+    </div>
 
-    <div class="title">🎮 Player Hours</div>
+    <!-- Lookup Tab -->
+    <div id="lookup" class="tab show">
+        <div class="title">🎮 Player Hours</div>
+        <input type="text" id="playerID" class="input-box" placeholder="Enter Player ID">
+        <button class="app-btn" onclick="lookup()">Check Hours</button>
+        <div id="result" class="result-box"></div>
+    </div>
 
-    <input type="text" id="playerID" class="input-box" placeholder="Enter Player ID">
-    <button class="app-btn" onclick="lookup()">Check Hours</button>
-
-    <div id="result" class="result-box"></div>
-
-    <footer style="margin-top:20px;font-size:13px;opacity:0.6;">
-        Boundless AI
-    </footer>
+    <!-- Leaderboard Tab -->
+    <div id="leaderboard" class="tab fade">
+        <div class="nav" style="margin-bottom:15px;">
+            <button id="namiBtn" class="active" onclick="loadLeaderboard('Nami')">Nami</button>
+            <button id="piaBtn" onclick="loadLeaderboard('Pia')">Pia</button>
+        </div>
+        <div id="lbDiv" class="leaderboard"></div>
+    </div>
 </div>
 
 <script>
-    /* ============================
-       LIGHT / DARK MODE TOGGLE
-    ============================ */
-    function toggleTheme() {
-        const body = document.body;
-        const toggleButton = document.querySelector(".toggle");
+const apiUrl="https://script.google.com/macros/s/AKfycbwOtTP8TgoM6URjfUNLqK0962-wRAP4IDHlKQApNvpov6dH7A7fxmrKSZ45hg_mKGBIaA/exec";
 
-        if (body.getAttribute("data-theme") === "dark") {
-            body.setAttribute("data-theme", "light");
-            toggleButton.textContent = "☀️";
-        } else {
-            body.setAttribute("data-theme", "dark");
-            toggleButton.textContent = "🌙";
-        }
+/* Theme Toggle */
+function toggleTheme(){
+    const body=document.body;
+    const toggle=document.querySelector(".toggle");
+    if(body.getAttribute("data-theme")==="dark"){
+        body.setAttribute("data-theme","light");
+        toggle.textContent="☀️";
+    }else{
+        body.setAttribute("data-theme","dark");
+        toggle.textContent="🌙";
     }
+}
 
-    /* =====================================
-       SEARCH FUNCTION WITH LOADING SPINNER
-    ===================================== */
-    async function lookup() {
-        const id = document.getElementById("playerID").value.trim();
-        const result = document.getElementById("result");
+/* Tab Switching */
+function showTab(tab){
+    document.querySelectorAll(".tab").forEach(t=>t.classList.remove("show"));
+    document.getElementById(tab).classList.add("show");
+    document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
+    if(tab==="lookup") document.getElementById("tabLookup").classList.add("active");
+    else document.getElementById("tabLeaderboard").classList.add("active");
+}
 
-        if (!id) {
-            result.textContent = "Please enter a Player ID.";
-            result.classList.add("error");
-            return;
-        }
+/* Lookup Function */
+async function lookup(){
+    const id=document.getElementById("playerID").value.trim();
+    const result=document.getElementById("result");
+    if(!id){result.textContent="Please enter a Player ID."; result.classList.add("error"); return;}
+    result.innerHTML='<div class="spinner"></div>'; result.classList.remove("error");
+    try{
+        const res=await fetch(`${apiUrl}?id=${id}`);
+        const text=await res.text();
+        result.textContent=text;
+    }catch(err){result.textContent="Error connecting to server."; result.classList.add("error");}
+}
 
-        const apiUrl = "https://script.google.com/macros/s/AKfycbwOtTP8TgoM6URjfUNLqK0962-wRAP4IDHlKQApNvpov6dH7A7fxmrKSZ45hg_mKGBIaA/exec";
+/* Leaderboard Function */
+async function loadLeaderboard(char){
+    const lbDiv=document.getElementById("lbDiv");
+    lbDiv.innerHTML='<div class="spinner"></div>';
+    document.getElementById('namiBtn').classList.toggle('active',char==='Nami');
+    document.getElementById('piaBtn').classList.toggle('active',char==='Pia');
+    try{
+        const res=await fetch(`${apiUrl}?leaderboard=${char}`);
+        const data=await res.json();
+        if(data.length===0){lbDiv.textContent="No players found."; return;}
+        lbDiv.innerHTML="";
+        data.forEach((p,i)=>{
+            const div=document.createElement("div");
+            div.className="player";
+            div.innerHTML=`<span>#${i+1} ${p.name}</span><span>${p.hours} hours</span>`;
+            lbDiv.appendChild(div);
+        });
+    }catch(err){lbDiv.textContent="Error fetching leaderboard.";}
+}
 
-        // Show spinner
-        result.innerHTML = '<div class="spinner"></div>';
-        result.classList.remove("error");
+// Load default leaderboard
+loadLeaderboard('Nami');
 
-        try {
-            const response = await fetch(`${apiUrl}?id=${id}`);
-            const text = await response.text();
-            result.textContent = text;
-        } catch (err) {
-            result.textContent = "Error connecting to server.";
-            result.classList.add("error");
-        }
-    }
-
-    /* ============================
-       REGISTER SERVICE WORKER
-    ============================ */
-    if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("service-worker.js");
-    }
+/* PWA Service Worker Registration */
+if("serviceWorker" in navigator){navigator.serviceWorker.register("service-worker.js");}
 </script>
-
 </body>
 </html>
