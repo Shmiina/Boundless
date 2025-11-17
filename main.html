@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Player Hours Checker</title>
+</head>
+<body>
+    <h2>Check Player Hours</h2>
+
+    <input type="text" id="playerID" placeholder="Enter Player ID">
+    <button onclick="lookup()">Check</button>
+
+    <p id="result"></p>
+
+    <script>
+        async function lookup() {
+            const id = document.getElementById("playerID").value;
+            const url = "YOUR_WEB_APP_URL?id=" + id;
+
+            const response = await fetch(url);
+            const text = await response.text();
+
+            document.getElementById("result").innerText = text;
+        }
+    </script>
+</body>
+</html>
