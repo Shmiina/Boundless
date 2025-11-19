@@ -2,102 +2,33 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Player Hours — Leaderboard</title>
 <style>
-:root {
-  --bg:#0d1117; --card:#0f1720; --muted:#9aa4b2; --accent:#58a6ff; --accent-2:#1f6feb; 
-  --glass: rgba(255,255,255,0.03); --text:#e6edf3; --border: rgba(255,255,255,0.08);
+:root{
+  --bg:#0d1117; --card:#0f1720; --muted:#9aa4b2; --accent:#58a6ff; --accent-2:#1f6feb; --glass: rgba(255,255,255,0.03);
 }
 [data-theme="light"] {
-  --bg: #f5f7fa; --card: #ffffff; --muted: #5b6b78; --accent: #1a73e8; --accent-2: #1558b8; 
-  --glass: rgba(0,0,0,0.03); --text: #1a1a1a; --border: rgba(0,0,0,0.08);
+  --bg: #f5f7fa;
+  --card: #ffffff;
+  --muted: #5b6b78;
+  --accent: #1a73e8;
+  --accent-2: #1558b8;
+  --glass: rgba(0,0,0,0.03);
+  --text: #1a1a1a;
+  --border: rgba(0,0,0,0.08);
 }
-
-body {
-  margin:0;
-  font-family:Inter, sans-serif;
-  background:var(--bg);
-  color:var(--text);
-  display:flex;
-  justify-content:center;
-  padding:16px;
-}
-
-.app{
-  width:100%;
-  max-width:960px;
-  display:flex;
-  flex-direction:column;
-  gap:16px;
-}
-
-.topbar{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  flex-wrap:wrap;
-  gap:8px;
-}
-
-.search input{
-  width:100%;
-  padding:10px 12px;
-  border-radius:10px;
-  border:1px solid var(--border);
-  font-size:14px;
-  background:var(--card);
-  color:var(--text);
-}
-
-.theme-select{
-  padding:10px;
-  border-radius:10px;
-  background:var(--card);
-  color:var(--text);
-  border:1px solid var(--border);
-}
-
-.card{
-  background:var(--card);
-  padding:14px;
-  border-radius:12px;
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
-
-.leaderboard{
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-}
-
-.player{
-  display:flex;
-  justify-content:space-between;
-  padding:10px;
-  border-radius:10px;
-  background:var(--glass);
-  color:var(--text);
-  border:1px solid var(--border);
-}
-
-.button{
-  padding:8px 14px;
-  border-radius:10px;
-  border:none;
-  background:var(--accent);
-  color:#fff;
-  cursor:pointer;
-  font-weight:600;
-}
+body {margin:0;font-family:Inter,sans-serif;background:var(--bg);color:var(--text,#e6edf3);display:flex;justify-content:center;padding:16px;}
+.app{width:100%;max-width:960px;display:flex;flex-direction:column;gap:16px;}
+.topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+.search input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border,rgba(255,255,255,0.08));font-size:14px;background:var(--card);color:inherit;}
+.theme-select{padding:10px;border-radius:10px;background:var(--card);color:inherit;border:1px solid var(--border,rgba(255,255,255,0.08));}
+.card{background:var(--card);padding:14px;border-radius:12px;display:flex;flex-direction:column;gap:12px;}
+.leaderboard{display:flex;flex-direction:column;gap:8px;}
+.player{display:flex;align-items:center;padding:10px;border-radius:10px;background:var(--glass);}
+.button{padding:8px 14px;border-radius:10px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-weight:600;}
 .button:hover{background:var(--accent-2);}
-
-@media(max-width:800px){
-  .topbar{flex-direction:column;}
-  .card{flex-direction:column;}
-}
+@media(max-width:800px){.app{flex-direction:column;} .topbar{flex-direction:column;} .card{flex-direction:column;}}
 </style>
 </head>
 <body>
@@ -106,7 +37,7 @@ body {
   <!-- Topbar -->
   <div class="topbar">
     <div class="search">
-      <input id="mainSearch" placeholder="Search players..." />
+      <input id="mainSearch" placeholder="Search players...">
     </div>
     <select id="themeSelect" class="theme-select">
       <option value="auto">Auto</option>
@@ -128,14 +59,13 @@ body {
     </select>
     <div id="leaderboardDiv" class="leaderboard"></div>
   </div>
-
 </div>
 
 <script>
 const apiUrl = "https://script.google.com/macros/s/AKfycbwOtTP8TgoM6URjfUNLqK0962-wRAP4IDHlKQApNvpov6dH7A7fxmrKSZ45hg_mKGBIaA/exec";
 let mergedData = [], allData = [], themeMode = localStorage.getItem('ph_theme') || 'auto';
 
-// Theme toggle
+// Theme
 function applyTheme(mode){
   document.documentElement.setAttribute('data-theme',
     mode==='auto'? (window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark') : mode
@@ -144,14 +74,12 @@ function applyTheme(mode){
 applyTheme(themeMode);
 document.getElementById('themeSelect').value = themeMode;
 document.getElementById('themeSelect').addEventListener('change', e=>{
-  themeMode = e.target.value;
-  localStorage.setItem('ph_theme', themeMode);
-  applyTheme(themeMode);
+  themeMode=e.target.value; localStorage.setItem('ph_theme',themeMode); applyTheme(themeMode);
 });
 
 // Helpers
-function numberFmt(n){ return (Number(n)||0).toFixed(2); }
-function escapeHtml(s){ return String(s).replace(/</g,'&lt;'); }
+function numberFmt(n){return (Number(n)||0).toFixed(2);}
+function escapeHtml(s){return String(s).replace(/</g,'&lt;');}
 
 // Fetch
 async function fetchAll(){
@@ -159,33 +87,25 @@ async function fetchAll(){
   const reqs=chars.map(c=>fetch(apiUrl+'?leaderboard='+c).then(r=>r.json()).catch(()=>[]));
   const res=await Promise.all(reqs);
   const flat=res.flatMap((arr,i)=>(arr||[]).map(p=>({id:p.id,name:p.name,hours:Number(p.hours),character:chars[i]})));
-  allData = flat;
+  allData=flat;
   const map=new Map();
-  flat.forEach(p=>{if(!map.has(p.id)||p.hours>map.get(p.id).hours) map.set(p.id,p)});
+  flat.forEach(p=>{if(!map.has(p.id)||p.hours>map.get(p.id).hours) map.set(p.id,p);});
   mergedData=[...map.values()];
 }
 
 // Render
 function renderLeaderboard(char){
-  const box = document.getElementById('leaderboardDiv');
-  box.innerHTML = '';
-  const list = mergedData.filter(p => p.character === char)
-                         .sort((a,b)=>b.hours-a.hours)
-                         .slice(0,10);
-  const html = list.map((p,i) => `
-    <div class="player" style="display:flex;align-items:center;">
-      <div style="width:30px;text-align:right;margin-right:10px;font-weight:600;color:var(--muted)">
-        ${i + 1}.
-      </div>
-      <div style="flex:1">
-        ${escapeHtml(p.name)}<br><span style='font-size:12px;color:var(--muted)'>ID: ${escapeHtml(p.id)}</span>
-      </div>
+  const box=document.getElementById('leaderboardDiv');
+  box.innerHTML='';
+  const list=mergedData.filter(p=>p.character===char).sort((a,b)=>b.hours-a.hours).slice(0,10);
+  const html=list.map((p,i)=>`
+    <div class="player">
+      <div style="width:30px;text-align:right;margin-right:10px;font-weight:600;color:var(--muted)">${i+1}.</div>
+      <div style="flex:1">${escapeHtml(p.name)}<br><span style='font-size:12px;color:var(--muted)'>ID: ${escapeHtml(p.id)}</span></div>
       <div>${numberFmt(p.hours)} hrs</div>
-    </div>
-  `).join('');
-  box.innerHTML = html;
+    </div>`).join('');
+  box.innerHTML=html;
 }
-
 
 // Search
 function search(q){
@@ -193,12 +113,13 @@ function search(q){
   const box=document.getElementById('leaderboardDiv');
   box.innerHTML='';
   const list=allData.filter(p=>p.name.toLowerCase().includes(q)||p.id.toLowerCase().includes(q)).slice(0,20);
-  const html = list.map(p=>`
+  const html=list.map((p,i)=>`
     <div class="player">
-      <div>${escapeHtml(p.name)}<br><span style='font-size:12px;color:var(--muted)'>ID: ${escapeHtml(p.id)} • ${p.character}</span></div>
+      <div style="width:30px;text-align:right;margin-right:10px;font-weight:600;color:var(--muted)">${i+1}.</div>
+      <div style="flex:1">${escapeHtml(p.name)}<br><span style='font-size:12px;color:var(--muted)'>ID: ${escapeHtml(p.id)} • ${p.character}</span></div>
       <div>${numberFmt(p.hours)} hrs</div>
     </div>`).join('');
-  box.innerHTML = html;
+  box.innerHTML=html;
 }
 
 // Initialize
