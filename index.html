@@ -137,7 +137,8 @@ const apiUrl = "https://script.google.com/macros/s/AKfycbwOtTP8TgoM6URjfUNLqK096
 const characters = ['Nami','Pia','FREDDIE']; // add more as needed
 
 // ---------- State ----------
-let mergedData = []; // combined, deduped map of players with character source
+let mergedData = []; // deduped, highest hours per player (for leaderboard)
+let allData = [];    // all raw player records (for lookup)
 let debounceTimer;
 let themeMode = localStorage.getItem('ph_theme') || 'auto';
 
@@ -177,15 +178,17 @@ async function fetchAllLeaderboards(){
         character: characters[idx]
     })));
 
-    // Deduplicate by id — keep the record with highest hours, but do NOT filter by hours
+    // Save all raw player records for lookup
+    allData = flat;
+
+    // Deduplicate by id — keep the record with highest hours (for leaderboard)
     const map = new Map();
     flat.forEach(p =>{
         if(!p.id) return;
-        // No hours filter here
         if(!map.has(p.id) || (p.hours > map.get(p.id).hours)) map.set(p.id, p);
     });
 
-    mergedData = Array.from(map.values()); // mergedData now contains ALL players
+    mergedData = Array.from(map.values());
     return mergedData;
 }
 
@@ -228,7 +231,7 @@ function performLookup(query){
     const out = el('lookupResult');
     if(!query){ out.innerHTML = '<div class="empty">Type a name or ID to search. Results update in real time.</div>'; return; }
     const q = query.toLowerCase();
-    const results = mergedData.filter(p => (p.id && p.id.toLowerCase().includes(q)) || (p.name && p.name.toLowerCase().includes(q)));
+    const results = allData.filter(p => (p.id && p.id.toLowerCase().includes(q)) || (p.name && p.name.toLowerCase().includes(q)));
     if(!results.length) { out.innerHTML = '<div class="empty">No players found.</div>'; return; }
 
     out.innerHTML = '';
