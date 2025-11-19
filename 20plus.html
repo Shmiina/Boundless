@@ -115,4 +115,18 @@ async function renderPage(){
     </div>
   `).join('');
 
-  document.getElementB
+  document.getElementById('list').innerHTML = html;
+  document.getElementById('prevPage').disabled = page===1;
+  document.getElementById('nextPage').disabled = page*pageSize>=list.length;
+  document.getElementById('pageIndicator').textContent = `Page ${page} of ${Math.ceil(list.length/pageSize)}`;
+}
+
+// Pagination buttons
+document.getElementById('prevPage').addEventListener('click',()=>{page--; renderPage();});
+document.getElementById('nextPage').addEventListener('click',()=>{page++; renderPage();});
+
+// Initial render
+renderPage();
+</script>
+</body>
+</html>
