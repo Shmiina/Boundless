@@ -6,7 +6,7 @@
 <title>20+ Hours Players</title>
 <style>
 :root{
-  --bg:#0d1117; --card:#0f1720; --muted:#9aa4b2; --accent:#58a6ff; --glass: rgba(255,255,255,0.03);
+  --bg:#0d1117; --card:#0f1720; --muted:#9aa4b2; --accent:#58a6ff; --glass: rgba(255,255,255,0.03); --text:#e6edf3; --border: rgba(255,255,255,0.08);
 }
 [data-theme="light"] {
   --bg: #f5f7fa;
@@ -15,29 +15,14 @@
   --accent: #1a73e8;
   --accent-2: #1558b8;
   --glass: rgba(0,0,0,0.03);
-  --text: #1a1a1a; /* Add this for normal text in light mode */
-  --border: rgba(0,0,0,0.08); /* For input and card borders */
+  --text: #1a1a1a;
+  --border: rgba(0,0,0,0.08);
 }
 body {
-  color: var(--text, #e6edf3); /* fallback to dark mode default */
-}
-
-.search input, .theme-select, .button {
-  border: 1px solid var(--border, rgba(255,255,255,0.08));
-  background: var(--card);
-  color: var(--text, #e6edf3);
-}
-
-.player {
-  background: var(--glass);
-  color: var(--text, #e6edf3);
-}
-
-body{
   margin:0;
   font-family:Inter, sans-serif;
   background:var(--bg);
-  color:#e6edf3;
+  color:var(--text);
   display:flex;
   justify-content:center;
   padding:16px;
@@ -55,8 +40,8 @@ body{
   padding:10px 12px;
   border-radius:10px;
   background:var(--card);
-  color:inherit;
-  border:1px solid rgba(255,255,255,0.08);
+  color:var(--text);
+  border:1px solid var(--border);
   font-size:14px;
   text-decoration:none;
   cursor:pointer;
@@ -78,13 +63,14 @@ body{
   padding:10px;
   border-radius:10px;
   background:var(--glass);
+  color:var(--text);
 }
 button{
   padding:8px 14px;
   border-radius:8px;
   border:none;
-  background:var(--card);
-  color:inherit;
+  background:var(--accent);
+  color:#fff;
   cursor:pointer;
 }
 button:disabled{opacity:0.5;cursor:not-allowed;}
@@ -94,7 +80,6 @@ button:disabled{opacity:0.5;cursor:not-allowed;}
 <body>
 <div class="app">
 
-  <!-- Topbar -->
   <div class="topbar">
     <a href="index.html" class="link-button">← Back to Leaderboard</a>
     <select id="themeSelect" class="theme-select">
@@ -104,11 +89,9 @@ button:disabled{opacity:0.5;cursor:not-allowed;}
     </select>
   </div>
 
-  <!-- Leaderboard Card -->
   <div class="card">
     <h2>Players with 20+ Hours</h2>
     <div id="list" class="leaderboard"></div>
-    <!-- Pagination -->
     <div style="display:flex;justify-content:center;gap:12px;margin-top:20px;">
       <button id="prevPage">Prev</button>
       <span id="pageIndicator" style="font-weight:600;color:var(--muted)">Page 1</span>
@@ -135,10 +118,10 @@ document.getElementById('themeSelect').addEventListener('change', e=>{
   applyTheme(themeMode);
 });
 
-// Format numbers to 2 decimal places
+// Format numbers to 2 decimals
 function numberFmt(n){ return (Number(n)||0).toFixed(2); }
 
-// Fetch + cache data
+// Fetch + cache
 async function fetchData(){
   if(cachedData.length) return cachedData;
   const chars=['Nami','Pia','FREDDIE'];
@@ -157,12 +140,11 @@ async function renderPage(){
   const start = (page-1)*pageSize;
   const slice = list.slice(start, start+pageSize);
 
-  const html = slice.map(p=>`
+  document.getElementById('list').innerHTML = slice.map(p=>`
     <div class="player">
       <div>${p.name}<br><span style="font-size:12px;color:var(--muted)">ID: ${p.id} • ${p.character}</span></div>
       <div>${numberFmt(p.hours)} hrs</div>
     </div>`).join('');
-  document.getElementById('list').innerHTML = html;
 
   document.getElementById('prevPage').disabled = page===1;
   document.getElementById('nextPage').disabled = page*pageSize>=list.length;
