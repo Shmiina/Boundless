@@ -61,19 +61,31 @@ async function cachedFetch(){
 let page = 1;
 const pageSize = 20;
 
+function numberFmt(n){ return (Number(n)||0).toFixed(2); }
+
 async function renderPage(){
   const list = await cachedFetch();
-  const start=(page-1)*pageSize;
-  const slice=list.slice(start,start+pageSize);
-  const box=document.getElementById('list');
-  box.innerHTML='';
+  const start = (page-1)*pageSize;
+  const slice = list.slice(start, start+pageSize);
+  const box = document.getElementById('list');
+  box.innerHTML = '';
   slice.forEach(p=>{
-    const row=document.createElement('div'); row.className='player';
-    row.innerHTML=`<div>${p.name}<br><span style='font-size:12px;color:var(--muted)'>ID: ${p.id} • ${p.character}</span></div><div>${p.hours} hrs</div>`;
+    const row = document.createElement('div'); 
+    row.className = 'player';
+    row.innerHTML = `
+      <div>
+        ${p.name}<br>
+        <span style='font-size:12px;color:var(--muted)'>ID: ${p.id} • ${p.character}</span>
+      </div>
+      <div>${numberFmt(p.hours)} hrs</div>
+    `;
     box.appendChild(row);
   });
-  updateButtons(list.length);
+  document.getElementById('prevPage').disabled = page===1;
+  document.getElementById('nextPage').disabled = page*pageSize>=list.length;
+  document.getElementById('pageIndicator').textContent = `Page ${page}`;
 }
+
 
 function updateButtons(total){
   document.getElementById('prevPage').disabled = page === 1;
