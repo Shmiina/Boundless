@@ -67,6 +67,7 @@ body {background:var(--bg); color:var(--text); height:100vh; display:flex; justi
     <div class="nav">
         <button id="tabLookup" class="active" onclick="showTab('lookup')">Lookup</button>
         <button id="tabLeaderboard" onclick="showTab('leaderboard')">Leaderboard</button>
+        <button id="tabOver20" onclick="showTab('over20')">20 Hours & Above</button>
     </div>
 
     <!-- Lookup Tab -->
@@ -88,6 +89,14 @@ body {background:var(--bg); color:var(--text); height:100vh; display:flex; justi
     </div>
 </div>
 
+ <!-- Over 20-->
+
+<div id="over20" class="tab fade">
+    <div class="title">🏆 20 Hours & Above</div>
+    <div id="over20Div" class="leaderboard"></div>
+</div>
+
+
 <script>
 const apiUrl="https://script.google.com/macros/s/AKfycbwOtTP8TgoM6URjfUNLqK0962-wRAP4IDHlKQApNvpov6dH7A7fxmrKSZ45hg_mKGBIaA/exec";
 
@@ -106,12 +115,26 @@ function toggleTheme(){
 
 /* Tab Switching */
 function showTab(tab){
-    document.querySelectorAll(".tab").forEach(t=>t.classList.remove("show"));
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("show"));
     document.getElementById(tab).classList.add("show");
-    document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
-    if(tab==="lookup") document.getElementById("tabLookup").classList.add("active");
-    else document.getElementById("tabLeaderboard").classList.add("active");
+
+    // Reset active states
+    document.getElementById("tabLookup").classList.remove("active");
+    document.getElementById("tabLeaderboard").classList.remove("active");
+    document.getElementById("tabOver20").classList.remove("active");
+
+    if(tab === "lookup") {
+        document.getElementById("tabLookup").classList.add("active");
+    } 
+    else if(tab === "leaderboard") {
+        document.getElementById("tabLeaderboard").classList.add("active");
+    }
+    else if(tab === "over20") {
+        document.getElementById("tabOver20").classList.add("active");
+        loadOver20(); // Load automatically
+    }
 }
+
 
 /* Lookup Function */
 async function lookup(){
@@ -152,6 +175,40 @@ async function loadLeaderboard(char){
 
 // Load default leaderboard
 loadLeaderboard('Nami');
+
+async function loadOver20(){
+    const overDiv = document.getElementById("over20Div");
+    overDiv.innerHTML = '<div class="spinner"></div>';
+
+    try {
+        // Fetch ALL players (API must support leaderboard=All)
+        const res = await fetch(`${apiUrl}?leaderboard=All`);
+        const data = await res.json();
+
+        // Filter 20 and above
+        const filtered = data.filter(p => Number(p.hours) >= 20);
+
+        if(filtered.length === 0){
+            overDiv.textContent = "No players with 20 hours and above.";
+            return;
+        }
+
+        overDiv.innerHTML = "";
+        filtered.forEach((p, i) => {
+            const div = document.createElement("div");
+            div.className = "player";
+            div.innerHTML = `
+                <span>#${i+1} ${p.id}</span>
+                <span>${p.name}</span>
+                <span>${Number(p.hours).toFixed(2)} hours</span>
+            `;
+            overDiv.appendChild(div);
+        });
+    } catch (err) {
+        overDiv.textContent = "Error loading 20+ hour list.";
+    }
+}
+
 
 /* PWA Service Worker Registration */
 if("serviceWorker" in navigator){navigator.serviceWorker.register("service-worker.js");}
