@@ -1,0 +1,38 @@
+<!-- 20plus.html — Original unedited version of over20.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>20+ Hours Players</title>
+<style>
+:root{
+  --bg:#0d1117; --card:#0f1720; --muted:#9aa4b2; --accent:#58a6ff; --glass:rgba(255,255,255,0.03);
+}
+body{margin:0;font-family:Inter, sans-serif;background:var(--bg);color:#e6edf3;padding:20px;}
+.card{background:var(--card);padding:16px;border-radius:12px;max-width:760px;margin:auto;}
+.player{display:flex;justify-content:space-between;padding:10px;margin-top:8px;border-radius:10px;background:var(--glass);} 
+</style>
+</head>
+<body>
+<div class="card">
+  <h2>Players with 20+ Hours</h2>
+  <div id="list" class="leaderboard"></div>
+</div>
+
+<script>
+const apiUrl = "YOUR_SCRIPT_URL";
+async function load(){
+  const chars=['Nami','Pia','FREDDIE'];
+  const req=chars.map(c=>fetch(apiUrl+'?leaderboard='+c).then(r=>r.json()).catch(()=>[]));
+  const res=await Promise.all(req);
+  const flat=res.flatMap((arr,i)=>(arr||[]).map(p=>({id:p.id,name:p.name,hours:Number(p.hours),character:chars[i]})));
+  const unique=new Map(); flat.forEach(p=>{if(!unique.has(p.id)||p.hours>unique.get(p.id).hours) unique.set(p.id,p)});
+  const list=[...unique.values()].filter(p=>p.hours>=20).sort((a,b)=>b.hours-a.hours);
+  const box=document.getElementById('list');
+  list.forEach(p=>{const row=document.createElement('div'); row.className='player'; row.innerHTML=`<div>${p.name}<br><span style='font-size:12px;color:var(--muted)'>ID: ${p.id} • ${p.character}</span></div><div>${p.hours} hrs</div>`; box.appendChild(row);});
+}
+load();
+</script>
+</body>
+</html>
