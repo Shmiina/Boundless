@@ -1,307 +1,184 @@
-<!-- Full Overhauled HTML/JS Leaderboard System — Design Upgrades, Animations, Dark Mode, PWA, Real-Time Search, Top-10 Leaderboard, 20+ Combined List -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Player Hours — Leaderboard</title>
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#0d1117">
-<link rel="icon" href="/icon-192.png">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Player Hours App</title>
 <style>
-:root{
-  --bg:#0d1117; --card:#0f1720; --muted:#9aa4b2; --accent:#58a6ff; --accent-2:#1f6feb; --glass: rgba(255,255,255,0.03);
+:root {
+    --bg: #f5f7fa;
+    --card: #ffffff;
+    --text: #111;
+    --accent: #1a73e8;
+    --accent-hover: #1558b8;
+    --danger: #d93025;
 }
-[data-theme="light"]{ --bg:#f5f7fa; --card:#ffffff; --muted:#5b6b78; --accent:#1a73e8; --accent-2:#1558b8; --glass: rgba(0,0,0,0.03); }
-*{box-sizing:border-box}
-html,body{height:100%}
-body{margin:0;background:linear-gradient(180deg,#071021 0%, #071827 60%);font-family:Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial;color:#e6edf3;display:flex;align-items:center;justify-content:center;padding:28px;transition:background .25s}
-[data-theme="light"] body{background:linear-gradient(180deg,#f6f8fb 0%, #eef3f8 60%);color:#0b1220}
-.app-card{width:100%;max-width:760px;border-radius:18px;background:var(--card);box-shadow:0 10px 40px rgba(2,6,23,0.6);overflow:hidden;display:grid;grid-template-columns:360px 1fr}
-.sidebar{padding:22px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);backdrop-filter: blur(6px)}
-.brand{display:flex;align-items:center;gap:12px;margin-bottom:14px}
-.logo{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-weight:700;color:white}
-.h1{font-size:18px;font-weight:700}
-.small{font-size:13px;color:var(--muted);margin-top:6px}
-.controls{margin-top:18px;display:flex;flex-direction:column;gap:10px}
-.input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;outline:none;font-size:14px}
-.btn{padding:10px 12px;border-radius:10px;border:none;background:var(--accent);color:white;font-weight:600;cursor:pointer}
-.btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04)}
-.theme-toggle{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:12px}
-.tabs{display:flex;gap:8px;margin-top:18px}
-.tab-btn{flex:1;padding:8px 10px;border-radius:9px;border:none;background:transparent;color:var(--muted);cursor:pointer}
-.tab-btn.active{background:linear-gradient(90deg,var(--accent)22%,var(--accent-2)100%);color:white;font-weight:700}
-.main{padding:22px}
-.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.search{flex:1;display:flex;gap:8px;align-items:center}
-.search input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);font-size:14px}
-.chardrop{margin-left:12px;padding:8px 10px;border-radius:10px}
-.card{margin-top:16px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);padding:12px;border-radius:12px}
-.leaderboard{display:flex;flex-direction:column;gap:8px}
-.player{display:grid;grid-template-columns:1fr auto;gap:10px;padding:10px;border-radius:10px;background:var(--glass);align-items:center;transition:transform .18s ease,box-shadow .18s}
-.player:hover{transform:translateY(-4px);box-shadow:0 8px 28px rgba(2,6,23,0.6)}
-.player .meta{display:flex;flex-direction:column}
-.player .meta .name{font-weight:700}
-.player .meta .id{font-size:12px;color:var(--muted)}
-.player .hours{font-weight:800;min-width:80px;text-align:right}
-.badge{display:inline-block;padding:6px 8px;border-radius:999px;font-weight:700}
-.gold{background:linear-gradient(90deg,#FFD166,#F4A261);color:#2b1b00}
-.silver{background:linear-gradient(90deg,#CBD5E1,#A8B3C9);color:#0b1a2b}
-.bronze{background:linear-gradient(90deg,#E9A66B,#C77B4A);color:#2b1200}
-.empty{padding:18px;text-align:center;color:var(--muted)}
-.spinner{width:36px;height:36px;border-radius:50%;border:4px solid rgba(255,255,255,0.08);border-top-color:var(--accent);animation:spin .9s linear infinite;margin:18px auto}
-@keyframes spin{to{transform:rotate(360deg)}}
-.footer{margin-top:12px;font-size:12px;color:var(--muted)}
-/* Responsive */
-@media (max-width:820px){.app-card{grid-template-columns:1fr}.sidebar{order:2}.main{order:1}}
+[data-theme="dark"] {
+    --bg: #0d1117;
+    --card: #161b22;
+    --text: #e6edf3;
+    --accent: #58a6ff;
+    --accent-hover: #1f6feb;
+}
+body {
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+    font-family: "Inter", sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    padding: 20px;
+}
+.app-card {
+    width: 100%;
+    max-width: 450px;
+    background: var(--card);
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: 0 0 25px rgba(0,0,0,0.15);
+}
+.nav-main {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+.nav-main button {
+    flex: 1;
+    margin: 0 5px;
+    padding: 12px;
+    border: none;
+    border-radius: 12px;
+    background: var(--accent);
+    color: #fff;
+    font-weight: bold;
+    cursor: pointer;
+}
+.nav-main button.active {
+    background: var(--accent-hover);
+}
+.tab { display: none; }
+.tab.show { display: block; }
+.input-box {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: 2px solid #ccc;
+    margin-bottom: 10px;
+}
+.app-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: bold;
+    cursor: pointer;
+}
+.player {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px;
+    background: var(--card);
+    border-radius: 12px;
+    margin-bottom: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+.list-box {
+    max-height: 500px;
+    overflow-y: auto;
+}
 </style>
 </head>
-<body>
-<div class="app-card" id="app">
-    <div class="sidebar">
-        <div class="brand">
-            <div class="logo">PH</div>
-            <div>
-                <div class="h1">Player Hours</div>
-                <div class="small">Lookup • Leaderboard • 20+ Hours</div>
-            </div>
-        </div>
+<body data-theme="dark">
+<div class="app-card">
 
-        <div class="controls">
-            <input id="lookupInput" class="input" placeholder="Search player by ID or name..." />
-            <div style="display:flex;gap:8px">
-                <button id="lookupBtn" class="btn">Lookup</button>
-                <button id="clearBtn" class="btn ghost">Clear</button>
-            </div>
-
-            <div class="theme-toggle">
-                <div>
-                    <div style="font-size:13px;color:var(--muted)">Theme</div>
-                    <div style="font-weight:700">Auto / Light / Dark</div>
-                </div>
-                <select id="themeSelect" class="input" style="width:130px;padding:8px">
-                    <option value="auto">Auto</option>
-                    <option value="dark">Dark</option>
-                    <option value="light">Light</option>
-                </select>
-            </div>
-
-            <div class="tabs" style="margin-top:18px">
-                <button id="tabLookup" class="tab-btn active">Lookup</button>
-                <button id="tabLeaderboard" class="tab-btn">Leaderboard</button>
-                <button id="tabOver20" class="tab-btn">20+ Hours</button>
-            </div>
-
-            <div class="footer">App packed with modern UI, PWA-ready, real-time search and animations.</div>
-        </div>
+    <div class="nav-main">
+        <button id="tabLookup" class="active" onclick="showTab('lookup')">Lookup</button>
+        <button id="tabLeaderboard" onclick="showTab('leaderboard')">Leaderboard</button>
+        <button id="tabTwenty" onclick="showTab('twentyPlus')">20+ Hours</button>
     </div>
 
-    <div class="main">
-        <div class="topbar">
-            <div class="search">
-                <input id="mainSearch" placeholder="Real-time search across players..." />
-                <select id="charSelect" class="chardrop">
-                    <option value="Nami">Nami</option>
-                    <option value="Pia">Pia</option>
-                    <option value="FREDDIE">FREDDIE</option>
-                </select>
-            </div>
-            <div style="display:flex;gap:8px;align-items:center">
-                <div id="countBadge" class="badge gold" style="display:none">0</div>
-            </div>
-        </div>
-
-        <!-- Leaderboard Card -->
-        <div id="contentLookup" class="card" style="display:block">
-            <div class="title">Lookup</div>
-            <div id="lookupResult" class="empty">Type a name or ID to search. Results update in real time.</div>
-        </div>
-
-        <div id="contentLeaderboard" class="card" style="display:none">
-            <div class="title">Leaderboard — Top 10</div>
-            <div id="leaderboardDiv" class="leaderboard"></div>
-            <div id="leaderboardEmpty" class="empty"></div>
-        </div>
-
-        <div id="contentOver20" class="card" style="display:none">
-            <div class="title">All Players — 20 Hours & Above</div>
-            <div id="over20Div" class="leaderboard"></div>
-            <div id="over20Empty" class="empty"></div>
-        </div>
+    <!-- PLAYER LOOKUP -->
+    <div id="lookup" class="tab show">
+        <h2>Player Lookup</h2>
+        <input type="text" id="playerID" class="input-box" placeholder="Enter Player ID...">
+        <button class="app-btn" onclick="lookupPlayer()">Search</button>
+        <div id="lookupResult" style="margin-top:15px; font-size:18px;"></div>
     </div>
+
+    <!-- LEADERBOARDS (TOP 10 PER CHARACTER) -->
+    <div id="leaderboard" class="tab">
+        <h2>Leaderboards</h2>
+        <div style="display:flex; gap:10px; margin-bottom:10px;">
+            <button class="app-btn" onclick="loadLeader('Nami')">Nami</button>
+            <button class="app-btn" onclick="loadLeader('Pia')">Pia</button>
+            <button class="app-btn" onclick="loadLeader('Freddie')">Freddie</button>
+        </div>
+        <div id="leaderList" class="list-box"></div>
+    </div>
+
+    <!-- 20+ HOURS TAB -->
+    <div id="twentyPlus" class="tab">
+        <h2>20+ Hours Players</h2>
+        <div id="twentyList" class="list-box"></div>
+    </div>
+
 </div>
 
 <script>
-// ---------- Configuration ----------
-const apiUrl = "https://script.google.com/macros/s/AKfycbwOtTP8TgoM6URjfUNLqK0962-wRAP4IDHlKQApNvpov6dH7A7fxmrKSZ45hg_mKGBIaA/exec";
-const characters = ['Nami','Pia','FREDDIE']; // add more as needed
+const apiUrl = "https://script.google.com/macros/s/AKfycbwOtTP8TgoM6URjfUNLqK0962-wRAP4IDHlKQApNvpov6dH7A7fxmrKSZ45hg_mKGBIaA/exec"; // Replace
 
-// ---------- State ----------
-let mergedData = []; // combined, deduped map of players with character source
-let debounceTimer;
-let themeMode = localStorage.getItem('ph_theme') || 'auto';
-
-// ---------- Utilities ----------
-function escapeHtml(str){ return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
-function numberFmt(n){ return (Number(n)||0).toFixed(2); }
-function debounce(fn, ms=250){ clearTimeout(debounceTimer); debounceTimer=setTimeout(fn,ms); }
-
-// ---------- Theme handling ----------
-function applyTheme(mode){
-    if(mode==='auto'){
-        const prefers = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', prefers);
-    } else {
-        document.documentElement.setAttribute('data-theme', mode);
-    }
+function showTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('show'));
+    document.getElementById(tab).classList.add('show');
+    document.querySelectorAll('.nav-main button').forEach(b => b.classList.remove('active'));
+    if (tab === 'lookup') tabLookup.classList.add('active');
+    if (tab === 'leaderboard') tabLeaderboard.classList.add('active');
+    if (tab === 'twentyPlus') tabTwenty.classList.add('active');
 }
 
-// ---------- DOM helpers ----------
-const el = id => document.getElementById(id);
+async function lookupPlayer() {
+    const id = document.getElementById('playerID').value.trim();
+    if (!id) return;
 
-// ---------- Fetch & merge leaderboards ----------
-async function fetchAllLeaderboards(){
-    // Fetch each character in parallel, tolerate failures
-    const promises = characters.map(ch =>
-        fetch(`${apiUrl}?leaderboard=${encodeURIComponent(ch)}`)
-            .then(r => r.ok ? r.json() : [])
-            .catch(()=>[])
-    );
-    const results = await Promise.all(promises); // array of arrays
+    const res = await fetch(`${apiUrl}?id=${id}`);
+    const text = await res.text();
 
-    // Flatten and normalize with character source
-    const flat = results.flatMap((arr, idx) => (arr||[]).map(p => ({
-        id: p.id || p.playerId || '',
-        name: p.name || p.playerName || '',
-        hours: Number(p.hours),
-        character: characters[idx]
-    })));
-
-    // Deduplicate by id — keep the record with highest hours
-    const map = new Map();
-    flat.forEach(p =>{
-        if(!p.id) return;
-        if(!map.has(p.id) || (p.hours > map.get(p.id).hours)) map.set(p.id, p);
-    });
-
-    mergedData = Array.from(map.values());
-    return mergedData;
+    document.getElementById('lookupResult').textContent = text;
 }
 
-// ---------- UI rendering ----------
-function renderLeaderboardFor(char){
-    const container = el('leaderboardDiv');
-    container.innerHTML = '';
-    const list = mergedData.filter(p => p.character === char).sort((a,b)=>b.hours - a.hours).slice(0,10);
-    if(!list.length){ el('leaderboardEmpty').textContent = `No players for ${char}.`; return; } else el('leaderboardEmpty').textContent='';
+async function loadLeader(char) {
+    const res = await fetch(`${apiUrl}?leaderboard=${char}`);
+    const data = await res.json();
 
-    list.forEach((p,i)=>{
-        const row = document.createElement('div'); row.className='player';
-        const meta = document.createElement('div'); meta.className='meta';
-        meta.innerHTML = `<div class="name">${escapeHtml(p.name)}</div><div class="id">ID: ${escapeHtml(p.id)} • ${escapeHtml(p.character)}</div>`;
-        const hours = document.createElement('div'); hours.className='hours'; hours.textContent = numberFmt(p.hours) + ' hrs';
-        row.appendChild(meta); row.appendChild(hours);
-        container.appendChild(row);
+    const top10 = data.slice(0, 10);
+    const div = document.getElementById('leaderList');
+    div.innerHTML = "";
+
+    top10.forEach((p, i) => {
+        div.innerHTML += `<div class="player"><span>#${i+1}</span><span>${p.id}</span><span>${parseFloat(p.hours).toFixed(2)}h</span></div>`;
     });
 }
 
-function renderOver20All(){
-    const container = el('over20Div'); container.innerHTML = '';
-    const list = mergedData.filter(p=> !isNaN(p.hours) && p.hours >= 20).sort((a,b)=>b.hours - a.hours);
-    if(!list.length){ el('over20Empty').textContent = 'No players with 20 hours and above.'; el('countBadge').style.display='none'; return; } else el('over20Empty').textContent='';
+async function loadTwentyPlus() {
+    const res = await fetch(`${apiUrl}?all=1`);
+    const data = await res.json();
 
-    list.forEach((p,i)=>{
-        const row = document.createElement('div'); row.className='player';
-        const meta = document.createElement('div'); meta.className='meta';
-        meta.innerHTML = `<div class="name">${escapeHtml(p.name)}</div><div class="id">ID: ${escapeHtml(p.id)} • ${escapeHtml(p.character)}</div>`;
-        const hours = document.createElement('div'); hours.className='hours'; hours.textContent = numberFmt(p.hours) + ' hrs';
-        row.appendChild(meta); row.appendChild(hours);
-        container.appendChild(row);
-    });
-    // show count
-    el('countBadge').textContent = list.length; el('countBadge').style.display='inline-block';
-}
+    const filtered = data.filter(p => parseFloat(p.hours) >= 20)
+        .sort((a,b) => b.hours - a.hours);
 
-// ---------- Real-time Lookup ----------
-function performLookup(query){
-    const out = el('lookupResult');
-    if(!query){ out.innerHTML = '<div class="empty">Type a name or ID to search. Results update in real time.</div>'; return; }
-    const q = query.toLowerCase();
-    const results = mergedData.filter(p => (p.id && p.id.toLowerCase().includes(q)) || (p.name && p.name.toLowerCase().includes(q)));
-    if(!results.length) { out.innerHTML = '<div class="empty">No players found.</div>'; return; }
+    const div = document.getElementById('twentyList');
+    div.innerHTML = "";
 
-    out.innerHTML = '';
-    results.slice(0,20).forEach(p=>{
-        const row = document.createElement('div'); row.className='player';
-        const meta = document.createElement('div'); meta.className='meta';
-        meta.innerHTML = `<div class="name">${escapeHtml(p.name)}</div><div class="id">ID: ${escapeHtml(p.id)} • ${escapeHtml(p.character)}</div>`;
-        const hours = document.createElement('div'); hours.className='hours'; hours.textContent = numberFmt(p.hours) + ' hrs';
-        row.appendChild(meta); row.appendChild(hours);
-        out.appendChild(row);
+    filtered.forEach((p,i) => {
+        div.innerHTML += `<div class="player"><span>#${i+1}</span><span>${p.id}</span><span>${parseFloat(p.hours).toFixed(2)}h</span></div>`;
     });
 }
 
-// ---------- Tab controls ----------
-function setActiveTab(tab){
-    // sidebar tabs
-    ['tabLookup','tabLeaderboard','tabOver20'].forEach(id=>el(id).classList.remove('active'));
-    el('tab'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.add('active');
-    // content
-    el('contentLookup').style.display = tab==='Lookup' ? 'block' : 'none';
-    el('contentLeaderboard').style.display = tab==='Leaderboard' ? 'block' : 'none';
-    el('contentOver20').style.display = tab==='Over20' ? 'block' : 'none';
-}
-
-// ---------- Event wiring ----------
-el('lookupBtn').addEventListener('click', ()=> performLookup(el('lookupInput').value));
-el('clearBtn').addEventListener('click', ()=>{ el('lookupInput').value=''; performLookup(''); });
-
-el('mainSearch').addEventListener('input', (e)=> debounce(()=>performLookup(e.target.value),200));
-el('lookupInput').addEventListener('input', (e)=> debounce(()=>performLookup(e.target.value),200));
-
-el('tabLookup').addEventListener('click', ()=>{ setActiveTab('Lookup'); });
-el('tabLeaderboard').addEventListener('click', ()=>{ setActiveTab('Leaderboard'); renderLeaderboardFor(el('charSelect').value); });
-el('tabOver20').addEventListener('click', ()=>{ setActiveTab('Over20'); renderOver20All(); });
-
-el('charSelect').addEventListener('change', ()=>{ renderLeaderboardFor(el('charSelect').value); });
-
-el('themeSelect').addEventListener('change', (e)=>{ themeMode = e.target.value; localStorage.setItem('ph_theme', themeMode); applyTheme(themeMode); });
-
-// ---------- Initialization ----------
-async function init(){
-    // apply theme
-    applyTheme(themeMode);
-    el('themeSelect').value = themeMode;
-
-    // prefetch leaderboards and build mergedData
-    const loadingCard = el('contentLeaderboard'); loadingCard.querySelector('#leaderboardDiv').innerHTML = '<div class="spinner"></div>';
-    try{
-        await fetchAllLeaderboards();
-        // default render top 10 for first character
-        renderLeaderboardFor(el('charSelect').value);
-    }catch(e){ console.error('Failed to load leaderboards', e); }
-
-    // wire default active tab
-    setActiveTab('Lookup');
-}
-
-init();
-
-// ---------- Simple in-memory PWA Service Worker registration (creates blob SW) ----------
-(function registerSW(){
-    if('serviceWorker' in navigator){
-        const swCode = `self.addEventListener('install', e=>{self.skipWaiting();});
-        self.addEventListener('activate', e=>{self.clients.claim();});
-        self.addEventListener('fetch', e=>{
-            // basic: try network then fallback to cache (no caching implemented here)
-            e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));
-        });`;
-        const blob = new Blob([swCode],{type:'text/javascript'});
-        const swUrl = URL.createObjectURL(blob);
-        navigator.serviceWorker.register(swUrl).then(reg=>console.log('SW registered',reg)).catch(()=>console.warn('SW failed'));
-    }
-})();
-
+loadTwentyPlus();
 </script>
 </body>
 </html>
