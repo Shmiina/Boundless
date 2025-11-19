@@ -177,14 +177,15 @@ async function fetchAllLeaderboards(){
         character: characters[idx]
     })));
 
-    // Deduplicate by id — keep the record with highest hours
+    // Deduplicate by id — keep the record with highest hours, but do NOT filter by hours
     const map = new Map();
     flat.forEach(p =>{
         if(!p.id) return;
+        // No hours filter here
         if(!map.has(p.id) || (p.hours > map.get(p.id).hours)) map.set(p.id, p);
     });
 
-    mergedData = Array.from(map.values());
+    mergedData = Array.from(map.values()); // mergedData now contains ALL players
     return mergedData;
 }
 
