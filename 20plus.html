@@ -64,7 +64,7 @@ button:disabled {opacity:0.5; cursor:not-allowed;}
 
 <script>
 const apiUrl = "https://script.google.com/macros/s/AKfycbwOtTP8TgoM6URjfUNLqK0962-wRAP4IDHlKQApNvpov6dH7A7fxmrKSZ45hg_mKGBIaA/exec";
-let cachedData=[], page=1, pageSize=20;
+let allData = [], page=1, pageSize=20;
 
 // Theme
 let themeMode = localStorage.getItem('ph_theme') || 'auto';
@@ -86,6 +86,8 @@ function numberFmt(n){ return (Number(n)||0).toFixed(2); }
 
 // Fetch all players and merge duplicates
 async function fetchData(){
+  if(allData.length) return allData; // cache
+
   const chars=['Nami','Pia','FREDDIE'];
   const reqs=chars.map(c=>fetch(apiUrl+'?leaderboard='+c).then(r=>r.json()).catch(()=>[]));
   const res=await Promise.all(reqs);
@@ -95,8 +97,8 @@ async function fetchData(){
   const unique=new Map();
   flat.forEach(p=>{if(!unique.has(p.id)||p.hours>unique.get(p.id).hours) unique.set(p.id,p);});
 
-  cachedData=[...unique.values()].filter(p=>p.hours>=20).sort((a,b)=>b.hours-a.hours);
-  return cachedData;
+  allData=[...unique.values()].filter(p=>p.hours>=20).sort((a,b)=>b.hours-a.hours);
+  return allData;
 }
 
 // Render page
@@ -113,18 +115,4 @@ async function renderPage(){
     </div>
   `).join('');
 
-  document.getElementById('list').innerHTML = html;
-  document.getElementById('prevPage').disabled = page===1;
-  document.getElementById('nextPage').disabled = page*pageSize>=list.length;
-  document.getElementById('pageIndicator').textContent = `Page ${page} of ${Math.ceil(list.length/pageSize)}`;
-}
-
-// Pagination buttons
-document.getElementById('prevPage').addEventListener('click',()=>{page--; renderPage();});
-document.getElementById('nextPage').addEventListener('click',()=>{page++; renderPage();});
-
-// Initial render
-renderPage();
-</script>
-</body>
-</html>
+  document.getElementB
