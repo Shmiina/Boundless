@@ -82,6 +82,7 @@ body {background:var(--bg); color:var(--text); height:100vh; display:flex; justi
         <div class="nav" style="margin-bottom:15px;">
             <button id="namiBtn" class="active" onclick="loadLeaderboard('Nami')">Nami</button>
             <button id="piaBtn" onclick="loadLeaderboard('Pia')">Pia</button>
+            <button id="FREDDIEBtn" onclick="loadLeaderboard('FREDDIE')">Freddie</button>
         </div>
         <div id="lbDiv" class="leaderboard"></div>
     </div>
@@ -131,6 +132,7 @@ async function loadLeaderboard(char){
     lbDiv.innerHTML='<div class="spinner"></div>';
     document.getElementById('namiBtn').classList.toggle('active',char==='Nami');
     document.getElementById('piaBtn').classList.toggle('active',char==='Pia');
+    document.getElementById('FREDDIEBtn').classList.toggle('active',char==='FREDDIE');
     try{
         const res=await fetch(`${apiUrl}?leaderboard=${char}`);
         const data=await res.json();
