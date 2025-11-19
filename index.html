@@ -139,7 +139,10 @@ async function loadLeaderboard(char){
         data.forEach((p,i)=>{
             const div=document.createElement("div");
             div.className="player";
-            div.innerHTML=`<span>#${i+1} ${p.id}</span><span>${p.name}</span><span>${p.hours} hours</span>`;
+            div.innerHTML = `<span>#${i+1} ${p.id}</span>
+                             <span>${p.name}</span>
+                             <span>${Number(p.hours).toFixed(2)} hours</span>`;
+
             lbDiv.appendChild(div);
         });
     }catch(err){lbDiv.textContent="Error fetching leaderboard.";}
