@@ -149,9 +149,15 @@ async function renderPage(){
   const list = await fetchData();
   const start = (page-1)*pageSize;
   const slice = list.slice(start, start+pageSize);
-  document.getElementById('list').innerHTML = slice.map(p=>`
-    <div class="player">
-      <div>${p.name}<br><span style="font-size:12px;color:var(--muted)">ID: ${p.id} • ${p.character}</span></div>
+  
+  document.getElementById('list').innerHTML = slice.map((p, i) => `
+    <div class="player" style="display:flex;align-items:center;">
+      <div style="width:30px;text-align:right;margin-right:10px;font-weight:600;color:var(--muted)">
+        ${start + i + 1}.
+      </div>
+      <div style="flex:1">
+        ${p.name}<br><span style="font-size:12px;color:var(--muted)">ID: ${p.id} • ${p.character}</span>
+      </div>
       <div>${numberFmt(p.hours)} hrs</div>
     </div>
   `).join('');
@@ -160,6 +166,7 @@ async function renderPage(){
   document.getElementById('nextPage').disabled = page*pageSize>=list.length;
   document.getElementById('pageIndicator').textContent = `Page ${page}`;
 }
+
 
 // Pagination events
 document.getElementById('prevPage').addEventListener('click',()=>{page--; renderPage();});

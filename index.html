@@ -167,16 +167,25 @@ async function fetchAll(){
 
 // Render
 function renderLeaderboard(char){
-  const box=document.getElementById('leaderboardDiv');
-  box.innerHTML='';
-  const list=mergedData.filter(p=>p.character===char).sort((a,b)=>b.hours-a.hours).slice(0,10);
-  const html = list.map(p=>`
-    <div class="player">
-      <div>${escapeHtml(p.name)}<br><span style='font-size:12px;color:var(--muted)'>ID: ${escapeHtml(p.id)}</span></div>
+  const box = document.getElementById('leaderboardDiv');
+  box.innerHTML = '';
+  const list = mergedData.filter(p => p.character === char)
+                         .sort((a,b)=>b.hours-a.hours)
+                         .slice(0,10);
+  const html = list.map((p,i) => `
+    <div class="player" style="display:flex;align-items:center;">
+      <div style="width:30px;text-align:right;margin-right:10px;font-weight:600;color:var(--muted)">
+        ${i + 1}.
+      </div>
+      <div style="flex:1">
+        ${escapeHtml(p.name)}<br><span style='font-size:12px;color:var(--muted)'>ID: ${escapeHtml(p.id)}</span>
+      </div>
       <div>${numberFmt(p.hours)} hrs</div>
-    </div>`).join('');
+    </div>
+  `).join('');
   box.innerHTML = html;
 }
+
 
 // Search
 function search(q){
