@@ -1,24 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Player Hours — Leaderboard</title>
 <style>
-:root{
-  --bg:#0d1117; --card:#0f1720; --muted:#9aa4b2; --accent:#58a6ff; --accent-2:#1f6feb; --glass: rgba(255,255,255,0.03); --text:#e6edf3; --border: rgba(255,255,255,0.08);
+:root {
+  --bg:#0d1117; --card:#0f1720; --muted:#9aa4b2; --accent:#58a6ff; --accent-2:#1f6feb; 
+  --glass: rgba(255,255,255,0.03); --text:#e6edf3; --border: rgba(255,255,255,0.08);
 }
 [data-theme="light"] {
-  --bg: #f5f7fa;
-  --card: #ffffff;
-  --muted: #5b6b78;
-  --accent: #1a73e8;
-  --accent-2: #1558b8;
-  --glass: rgba(0,0,0,0.03);
-  --text: #1a1a1a;
-  --border: rgba(0,0,0,0.08);
+  --bg: #f5f7fa; --card: #ffffff; --muted: #5b6b78; --accent: #1a73e8; --accent-2: #1558b8; 
+  --glass: rgba(0,0,0,0.03); --text: #1a1a1a; --border: rgba(0,0,0,0.08);
 }
-body{
+
+body {
   margin:0;
   font-family:Inter, sans-serif;
   background:var(--bg);
@@ -27,6 +23,7 @@ body{
   justify-content:center;
   padding:16px;
 }
+
 .app{
   width:100%;
   max-width:960px;
@@ -34,6 +31,7 @@ body{
   flex-direction:column;
   gap:16px;
 }
+
 .topbar{
   display:flex;
   justify-content:space-between;
@@ -41,6 +39,7 @@ body{
   flex-wrap:wrap;
   gap:8px;
 }
+
 .search input{
   width:100%;
   padding:10px 12px;
@@ -50,6 +49,7 @@ body{
   background:var(--card);
   color:var(--text);
 }
+
 .theme-select{
   padding:10px;
   border-radius:10px;
@@ -57,6 +57,7 @@ body{
   color:var(--text);
   border:1px solid var(--border);
 }
+
 .card{
   background:var(--card);
   padding:14px;
@@ -65,11 +66,13 @@ body{
   flex-direction:column;
   gap:12px;
 }
+
 .leaderboard{
   display:flex;
   flex-direction:column;
   gap:8px;
 }
+
 .player{
   display:flex;
   justify-content:space-between;
@@ -77,7 +80,9 @@ body{
   border-radius:10px;
   background:var(--glass);
   color:var(--text);
+  border:1px solid var(--border);
 }
+
 .button{
   padding:8px 14px;
   border-radius:10px;
@@ -88,6 +93,7 @@ body{
   font-weight:600;
 }
 .button:hover{background:var(--accent-2);}
+
 @media(max-width:800px){
   .topbar{flex-direction:column;}
   .card{flex-direction:column;}
@@ -97,6 +103,7 @@ body{
 <body>
 <div class="app">
 
+  <!-- Topbar -->
   <div class="topbar">
     <div class="search">
       <input id="mainSearch" placeholder="Search players..." />
@@ -108,6 +115,7 @@ body{
     </select>
   </div>
 
+  <!-- Leaderboard Card -->
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;">
       <h3>Leaderboard</h3>
@@ -127,7 +135,7 @@ body{
 const apiUrl = "https://script.google.com/macros/s/AKfycbwOtTP8TgoM6URjfUNLqK0962-wRAP4IDHlKQApNvpov6dH7A7fxmrKSZ45hg_mKGBIaA/exec";
 let mergedData = [], allData = [], themeMode = localStorage.getItem('ph_theme') || 'auto';
 
-// Theme
+// Theme toggle
 function applyTheme(mode){
   document.documentElement.setAttribute('data-theme',
     mode==='auto'? (window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark') : mode
