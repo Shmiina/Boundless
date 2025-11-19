@@ -1,4 +1,3 @@
-<!-- 20plus.html — Original unedited version of over20.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,107 +6,151 @@
 <title>20+ Hours Players</title>
 <style>
 :root{
-  --bg:#0d1117; --card:#0f1720; --muted:#9aa4b2; --accent:#58a6ff; --glass:rgba(255,255,255,0.03);
+  --bg:#0d1117; --card:#0f1720; --muted:#9aa4b2; --accent:#58a6ff; --glass: rgba(255,255,255,0.03);
 }
-body{margin:0;font-family:Inter, sans-serif;background:var(--bg);color:#e6edf3;padding:20px;}
-.card{background:var(--card);padding:16px;border-radius:12px;max-width:760px;margin:auto;}
-.player{display:flex;justify-content:space-between;padding:10px;margin-top:8px;border-radius:10px;background:var(--glass);} 
+[data-theme="light"]{
+  --bg:#f5f7fa; --card:#ffffff; --muted:#5b6b78; --accent:#1a73e8; --glass: rgba(0,0,0,0.03);
+}
+body{
+  margin:0;
+  font-family:Inter, sans-serif;
+  background:var(--bg);
+  color:#e6edf3;
+  display:flex;
+  justify-content:center;
+  padding:16px;
+}
+.app{width:100%;max-width:760px;}
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-bottom:16px;
+}
+.theme-select, .link-button{
+  padding:10px 12px;
+  border-radius:10px;
+  background:var(--card);
+  color:inherit;
+  border:1px solid rgba(255,255,255,0.08);
+  font-size:14px;
+  text-decoration:none;
+  cursor:pointer;
+}
+.card{
+  background:var(--card);
+  padding:16px;
+  border-radius:12px;
+}
+.leaderboard{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin-top:10px;
+}
+.player{
+  display:flex;
+  justify-content:space-between;
+  padding:10px;
+  border-radius:10px;
+  background:var(--glass);
+}
+button{
+  padding:8px 14px;
+  border-radius:8px;
+  border:none;
+  background:var(--card);
+  color:inherit;
+  cursor:pointer;
+}
+button:disabled{opacity:0.5;cursor:not-allowed;}
+@media(max-width:600px){.topbar{flex-direction:column;gap:10px;}}
 </style>
 </head>
 <body>
-<div class="card">
-  <h2>Players with 20+ Hours</h2>
-  <div id="list" class="leaderboard"></div>
+<div class="app">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <a href="index.html" class="link-button">← Back to Leaderboard</a>
+    <select id="themeSelect" class="theme-select">
+      <option value="auto">Auto</option>
+      <option value="dark">Dark</option>
+      <option value="light">Light</option>
+    </select>
+  </div>
+
+  <!-- Leaderboard Card -->
+  <div class="card">
+    <h2>Players with 20+ Hours</h2>
+    <div id="list" class="leaderboard"></div>
+    <!-- Pagination -->
+    <div style="display:flex;justify-content:center;gap:12px;margin-top:20px;">
+      <button id="prevPage">Prev</button>
+      <span id="pageIndicator" style="font-weight:600;color:var(--muted)">Page 1</span>
+      <button id="nextPage">Next</button>
+    </div>
+  </div>
 </div>
 
 <script>
 const apiUrl = "https://script.google.com/macros/s/AKfycbwOtTP8TgoM6URjfUNLqK0962-wRAP4IDHlKQApNvpov6dH7A7fxmrKSZ45hg_mKGBIaA/exec";
-async function load(){
-  const chars=['Nami','Pia','FREDDIE'];
-  const req=chars.map(c=>fetch(apiUrl+'?leaderboard='+c).then(r=>r.json()).catch(()=>[]));
-  const res=await Promise.all(req);
-  const flat=res.flatMap((arr,i)=>(arr||[]).map(p=>({id:p.id,name:p.name,hours:Number(p.hours),character:chars[i]})));
-  const unique=new Map(); flat.forEach(p=>{if(!unique.has(p.id)||p.hours>unique.get(p.id).hours) unique.set(p.id,p)});
-  const list=[...unique.values()].filter(p=>p.hours>=20).sort((a,b)=>b.hours-a.hours);
-  const box=document.getElementById('list');
-  list.forEach(p=>{const row=document.createElement('div'); row.className='player'; row.innerHTML=`<div>${p.name}<br><span style='font-size:12px;color:var(--muted)'>ID: ${p.id} • ${p.character}</span></div><div>${p.hours} hrs</div>`; box.appendChild(row);});
+let cachedData=[], page=1, pageSize=20;
+
+// Theme toggle
+let themeMode = localStorage.getItem('ph_theme') || 'auto';
+function applyTheme(mode){
+  document.documentElement.setAttribute('data-theme',
+    mode==='auto'? (window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark') : mode);
 }
-load();
-// ---- Navigation ----
-const nav = document.createElement('div');
-nav.style.cssText = 'margin-top:20px;text-align:center;';
-nav.innerHTML = `<a href="index.html" style="color:var(--accent);font-weight:600;">← Back to Main</a>`;
-document.body.appendChild(nav);
+applyTheme(themeMode);
+document.getElementById('themeSelect').value = themeMode;
+document.getElementById('themeSelect').addEventListener('change', e=>{
+  themeMode = e.target.value;
+  localStorage.setItem('ph_theme', themeMode);
+  applyTheme(themeMode);
+});
 
-// ---- Caching Layer ----
-let cacheTime = 0;
-const cacheTTL = 5 * 60 * 1000;
-let cachedData = [];
+// Format numbers to 2 decimal places
+function numberFmt(n){ return (Number(n)||0).toFixed(2); }
 
-async function cachedFetch(){
-  const now = Date.now();
-  if(now - cacheTime < cacheTTL && cachedData.length > 0) return cachedData;
-  cacheTime = now;
+// Fetch + cache data
+async function fetchData(){
+  if(cachedData.length) return cachedData;
   const chars=['Nami','Pia','FREDDIE'];
-  const req=chars.map(c=>fetch(apiUrl+'?leaderboard='+c).then(r=>r.json()).catch(()=>[]));
-  const res=await Promise.all(req);
+  const reqs=chars.map(c=>fetch(apiUrl+'?leaderboard='+c).then(r=>r.json()).catch(()=>[]));
+  const res=await Promise.all(reqs);
   const flat=res.flatMap((arr,i)=>(arr||[]).map(p=>({id:p.id,name:p.name,hours:Number(p.hours),character:chars[i]})));
-  const unique=new Map(); flat.forEach(p=>{if(!unique.has(p.id)||p.hours>unique.get(p.id).hours) unique.set(p.id,p)});
+  const unique=new Map();
+  flat.forEach(p=>{if(!unique.has(p.id)||p.hours>unique.get(p.id).hours) unique.set(p.id,p)});
   cachedData=[...unique.values()].filter(p=>p.hours>=20).sort((a,b)=>b.hours-a.hours);
   return cachedData;
 }
 
-// ---- Pagination ----
-let page = 1;
-const pageSize = 20;
-
-function numberFmt(n){ return (Number(n)||0).toFixed(2); }
-
+// Render page
 async function renderPage(){
-  const list = await cachedFetch();
+  const list = await fetchData();
   const start = (page-1)*pageSize;
   const slice = list.slice(start, start+pageSize);
-  const box = document.getElementById('list');
-  box.innerHTML = '';
-  slice.forEach(p=>{
-    const row = document.createElement('div'); 
-    row.className = 'player';
-    row.innerHTML = `
-      <div>
-        ${p.name}<br>
-        <span style='font-size:12px;color:var(--muted)'>ID: ${p.id} • ${p.character}</span>
-      </div>
+
+  const html = slice.map(p=>`
+    <div class="player">
+      <div>${p.name}<br><span style="font-size:12px;color:var(--muted)">ID: ${p.id} • ${p.character}</span></div>
       <div>${numberFmt(p.hours)} hrs</div>
-    `;
-    box.appendChild(row);
-  });
+    </div>`).join('');
+  document.getElementById('list').innerHTML = html;
+
   document.getElementById('prevPage').disabled = page===1;
   document.getElementById('nextPage').disabled = page*pageSize>=list.length;
   document.getElementById('pageIndicator').textContent = `Page ${page}`;
 }
 
-
-function updateButtons(total){
-  document.getElementById('prevPage').disabled = page === 1;
-  document.getElementById('nextPage').disabled = page * pageSize >= total;
-  document.getElementById('pageIndicator').textContent = `Page ${page}`;
-}
-
-// ---- Pagination Controls ----
-const paginateDiv=document.createElement('div');
-paginateDiv.style.cssText='display:flex;justify-content:center;gap:12px;margin-top:20px;';
-paginateDiv.innerHTML = `
-  <button id="prevPage" style="padding:8px 14px;">Prev</button>
-  <span id="pageIndicator" style="font-weight:600;color:var(--muted)">Page 1</span>
-  <button id="nextPage" style="padding:8px 14px;">Next</button>
-`;
-document.body.appendChild(paginateDiv);
-
 document.getElementById('prevPage').addEventListener('click',()=>{page--;renderPage();});
 document.getElementById('nextPage').addEventListener('click',()=>{page++;renderPage();});
 
-// Load paginated version
-document.getElementById('list').innerHTML='';
+// Initial render
 renderPage();
 </script>
 </body>
