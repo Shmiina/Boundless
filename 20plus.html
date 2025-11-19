@@ -9,33 +9,39 @@
   --bg:#0d1117; --card:#0f1720; --muted:#9aa4b2; --accent:#58a6ff; --accent-2:#1f6feb; --glass: rgba(255,255,255,0.03);
 }
 [data-theme="light"] {
-  --bg: #f5f7fa;
-  --card: #ffffff;
-  --muted: #5b6b78;
-  --accent: #1a73e8;
-  --accent-2: #1558b8;
-  --glass: rgba(0,0,0,0.03);
-  --text: #1a1a1a;
-  --border: rgba(0,0,0,0.08);
+  --bg:#f5f7fa; --card:#ffffff; --muted:#5b6b78; --accent:#1a73e8; --accent-2:#1558b8; --glass: rgba(0,0,0,0.03); --text:#1a1a1a; --border: rgba(0,0,0,0.08);
 }
-body {margin:0;font-family:Inter,sans-serif;background:var(--bg);color:var(--text,#e6edf3);display:flex;justify-content:center;padding:16px;}
-.app{width:100%;max-width:960px;display:flex;flex-direction:column;gap:16px;}
-.topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
-.theme-select{padding:10px;border-radius:10px;background:var(--card);color:inherit;border:1px solid var(--border,rgba(255,255,255,0.08));}
-.card{background:var(--card);padding:14px;border-radius:12px;display:flex;flex-direction:column;gap:12px;}
-.leaderboard{display:flex;flex-direction:column;gap:8px;}
-.player{display:flex;align-items:center;padding:10px;border-radius:10px;background:var(--glass);}
-button{padding:8px 14px;border-radius:10px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-weight:600;}
-button:hover{background:var(--accent-2);}
-button:disabled{opacity:0.5;cursor:not-allowed;}
-@media(max-width:800px){.app{flex-direction:column;} .topbar{flex-direction:column;} .card{flex-direction:column;}}
+body {
+  margin:0;
+  font-family:Inter, sans-serif;
+  background:var(--bg);
+  color: var(--text,#e6edf3);
+  display:flex;
+  justify-content:center;
+  padding:16px;
+}
+.app {width:100%; max-width:760px; display:flex; flex-direction:column; gap:16px;}
+.topbar {display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;}
+.theme-select, .link-button {
+  padding:10px 12px; border-radius:10px; background:var(--card); color:inherit; border:1px solid var(--border, rgba(255,255,255,0.08)); font-size:14px; text-decoration:none; cursor:pointer;
+}
+.card {background:var(--card); padding:16px; border-radius:12px; display:flex; flex-direction:column; gap:12px;}
+.leaderboard {display:flex; flex-direction:column; gap:8px;}
+.player {display:flex; align-items:center; padding:10px; border-radius:10px; background:var(--glass);}
+.player div {flex:1;}
+button {padding:8px 14px; border-radius:8px; border:none; background:var(--accent); color:#fff; cursor:pointer; font-weight:600;}
+button:hover {background:var(--accent-2);}
+button:disabled {opacity:0.5; cursor:not-allowed;}
+.number {width:30px; text-align:right; margin-right:10px; font-weight:600; color:var(--muted);}
+@media(max-width:600px){.topbar{flex-direction:column;}.player{flex-direction:column;align-items:flex-start;}}
 </style>
 </head>
 <body>
 <div class="app">
 
+  <!-- Topbar -->
   <div class="topbar">
-    <a href="index.html"><button>← Back to Leaderboard</button></a>
+    <a href="index.html" class="link-button">← Back to Leaderboard</a>
     <select id="themeSelect" class="theme-select">
       <option value="auto">Auto</option>
       <option value="dark">Dark</option>
@@ -43,10 +49,12 @@ button:disabled{opacity:0.5;cursor:not-allowed;}
     </select>
   </div>
 
+  <!-- Leaderboard Card -->
   <div class="card">
     <h2>Players with 20+ Hours</h2>
     <div id="list" class="leaderboard"></div>
-    <div style="display:flex;justify-content:center;gap:12px;margin-top:20px;">
+    <!-- Pagination -->
+    <div style="display:flex;justify-content:center;gap:12px;margin-top:12px;">
       <button id="prevPage">Prev</button>
       <span id="pageIndicator" style="font-weight:600;color:var(--muted)">Page 1</span>
       <button id="nextPage">Next</button>
@@ -66,42 +74,48 @@ function applyTheme(mode){
   );
 }
 applyTheme(themeMode);
-document.getElementById('themeSelect').value=themeMode;
-document.getElementById('themeSelect').addEventListener('change',e=>{
-  themeMode=e.target.value; localStorage.setItem('ph_theme',themeMode); applyTheme(themeMode);
+document.getElementById('themeSelect').value = themeMode;
+document.getElementById('themeSelect').addEventListener('change', e=>{
+  themeMode = e.target.value;
+  localStorage.setItem('ph_theme', themeMode);
+  applyTheme(themeMode);
 });
 
-function numberFmt(n){return (Number(n)||0).toFixed(2);}
+// Format numbers
+function numberFmt(n){ return (Number(n)||0).toFixed(2); }
 
-// Fetch + cache
+// Fetch all players and merge duplicates
 async function fetchData(){
-  if(cachedData.length) return cachedData;
   const chars=['Nami','Pia','FREDDIE'];
   const reqs=chars.map(c=>fetch(apiUrl+'?leaderboard='+c).then(r=>r.json()).catch(()=>[]));
   const res=await Promise.all(reqs);
+
   const flat=res.flatMap((arr,i)=>(arr||[]).map(p=>({id:p.id,name:p.name,hours:Number(p.hours),character:chars[i]})));
+
   const unique=new Map();
   flat.forEach(p=>{if(!unique.has(p.id)||p.hours>unique.get(p.id).hours) unique.set(p.id,p);});
+
   cachedData=[...unique.values()].filter(p=>p.hours>=20).sort((a,b)=>b.hours-a.hours);
   return cachedData;
 }
 
 // Render page
 async function renderPage(){
-  const list=await fetchData();
-  const start=(page-1)*pageSize;
-  const slice=list.slice(start,start+pageSize);
+  const list = await fetchData();
+  const start = (page-1)*pageSize;
+  const slice = list.slice(start, start+pageSize);
 
-  const html=slice.map((p,i)=>`
+  const html = slice.map((p,i)=>`
     <div class="player">
-      <div style="width:30px;text-align:right;margin-right:10px;font-weight:600;color:var(--muted)">${start+i+1}.</div>
-      <div style="flex:1">${p.name}<br><span style="font-size:12px;color:var(--muted)">ID: ${p.id} • ${p.character}</span></div>
+      <div class="number">${start+i+1}.</div>
+      <div>${p.name}<br><span style="font-size:12px;color:var(--muted)">ID: ${p.id} • ${p.character}</span></div>
       <div>${numberFmt(p.hours)} hrs</div>
-    </div>`).join('');
-  document.getElementById('list').innerHTML=html;
+    </div>
+  `).join('');
 
+  document.getElementById('list').innerHTML = html;
   document.getElementById('prevPage').disabled = page===1;
-  document.getElementById('nextPage').disabled = (page*pageSize)>=list.length;
+  document.getElementById('nextPage').disabled = page*pageSize>=list.length;
   document.getElementById('pageIndicator').textContent = `Page ${page} of ${Math.ceil(list.length/pageSize)}`;
 }
 
