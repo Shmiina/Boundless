@@ -80,14 +80,28 @@ body {
   padding:8px;
   text-align:center;
 }
+.nav-buttons {
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:10px;
+}
 </style>
 </head>
 <body>
 <div class="app">
   <div class="card">
     <h2>PC Occupancy Tracker</h2>
+
+    <div class="nav-buttons">
+      <button class="btn" onclick="location.href='index.html'">Leaderboard</button>
+      <button class="btn" onclick="location.href='20plus.html'">Top 20+ Hours</button>
+      <button class="btn" id="yesterdayReportBtn">Yesterday's Downtime Report</button>
+      <button class="btn" id="resetNowBtn">Reset Now</button>
+    </div>
+
     <div id="pcs" class="pcs-grid">Loading...</div>
-    <button id="generateReport" class="btn" style="margin-top:10px;">Generate Report</button>
+    <button id="generateReport" class="btn" style="margin-top:10px;">Today's Report</button>
     <div id="reportContainer"></div>
   </div>
 </div>
@@ -178,11 +192,19 @@ async function updatePC(pc, status) {
 }
 
 // ============================
-// Generate report
+// Reports
 // ============================
 document.getElementById("generateReport").addEventListener("click", async () => {
+  await generateReport("today");
+});
+
+document.getElementById("yesterdayReportBtn").addEventListener("click", async () => {
+  await generateReport("yesterday");
+});
+
+async function generateReport(day) {
   try {
-    const res = await fetch(`${HTTP_BASE}/report`);
+    const res = await fetch(`${HTTP_BASE}/report?day=${day}`);
     const data = await res.json();
     let html = `<table class="report-table"><tr><th>PC</th><th>Total Uptime</th><th>Total Downtime</th></tr>`;
     Object.keys(data).forEach(pc => {
@@ -192,14 +214,45 @@ document.getElementById("generateReport").addEventListener("click", async () => 
     document.getElementById("reportContainer").innerHTML = html;
   } catch(e) {
     console.error(e);
-    alert("Failed to generate report");
+    alert(`Failed to generate ${day} report`);
   }
+}
+
+// ============================
+// Auto Reset at Midnight
+// ============================
+function scheduleReset() {
+  const now = new Date();
+  const nextMidnight = new Date();
+  nextMidnight.setHours(24,0,0,0); // next midnight
+  const msToMidnight = nextMidnight - now;
+
+  setTimeout(async () => {
+    try {
+      await fetch(`${HTTP_BASE}/reset`, { method:"POST" });
+      console.log("PCs reset at midnight");
+      loadInitial();
+    } catch(e){ console.error(e); }
+
+    // Schedule next reset
+    scheduleReset();
+  }, msToMidnight);
+}
+
+// Manual reset button
+document.getElementById("resetNowBtn").addEventListener("click", async () => {
+  try {
+    await fetch(`${HTTP_BASE}/reset`, { method:"POST" });
+    alert("PCs manually reset");
+    loadInitial();
+  } catch(e){ console.error(e); alert("Failed to reset"); }
 });
 
 // ============================
 // Initial load
 // ============================
 loadInitial();
+scheduleReset();
 </script>
 </body>
 </html>
