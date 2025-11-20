@@ -12,17 +12,19 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Database setup
+// Path to db.json
 const file = path.join(__dirname, 'db.json');
-const adapter = new JSONFile(file);
-const db = new Low(adapter);
 
-// Ensure db.json exists
+// Ensure db.json exists with at least empty object
 if (!fs.existsSync(file)) {
   fs.writeFileSync(file, JSON.stringify({ pcs: {} }, null, 2));
 }
 
-// Initialize DB with defaults if missing
+// Setup lowdb adapter and instance
+const adapter = new JSONFile(file);
+const db = new Low(adapter);
+
+// Initialize database with default PCs
 async function initDb() {
   await db.read();
   db.data ||= { pcs: {
@@ -33,12 +35,11 @@ async function initDb() {
   await db.write();
 }
 
-// Start server after DB initialization
 initDb().then(() => {
   const server = http.createServer(app);
   const wss = new WebSocket.Server({ server });
 
-  // Broadcast PC state
+  // Broadcast PC state to all WebSocket clients
   async function broadcastState() {
     await db.read();
     const payload = JSON.stringify({ type: "state", data: db.data.pcs });
@@ -53,13 +54,13 @@ initDb().then(() => {
     console.log("WS client connected");
   });
 
-  // Get current PCs
+  // Endpoint to get current PCs
   app.get("/pcs", async (req, res) => {
     await db.read();
     res.json(db.data.pcs);
   });
 
-  // Update PC status
+  // Endpoint to update PC status
   app.post("/update", async (req, res) => {
     const { pc, status, updatedBy } = req.body;
     if (!pc || !status) return res.status(400).json({ error: "pc and status required" });
@@ -79,7 +80,7 @@ initDb().then(() => {
     res.json({ ok: true });
   });
 
-  // Serve frontend static files
+  // Serve frontend static files from root
   app.use('/', express.static(path.join(__dirname, '..')));
 
   const PORT = process.env.PORT || 8080;
