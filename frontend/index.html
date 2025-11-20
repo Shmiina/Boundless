@@ -105,11 +105,7 @@ body {
   border-radius:8px;
 }
 .pc-title { font-size:18px; font-weight:600; margin-bottom:6px; }
-.pc-status { font-size:14px; margin-bottom:6px; font-weight:600; }
-.pc-status.free { color: #28a745; }       /* green */
-.pc-status.occupied { color: #dc3545; }   /* red */
-.pc-status.unknown { color: #6c757d; }    /* gray */
-
+.pc-status { font-size:14px; margin-bottom:6px; }
 .btn {
   padding:6px 10px;
   border:1px solid var(--accent);
@@ -120,7 +116,6 @@ body {
   margin-right:6px;
 }
 .btn:hover { background: var(--accent); color:#fff; }
-
 </style>
 </head>
 <body>
@@ -161,17 +156,12 @@ body {
 </div>
 
 <script>
-// ============================
-// Config
-// ============================
-const apiUrl = "https://script.google.com/macros/s/AKfycbwOtTP8TgoM6URjfUNLqK0962-wRAP4IDHlKQApNvpov6dH7A7fxmrKSZ45hg_mKGBIaA/exec"; // Google Apps Script URL
-const HTTP_BASE = "https://your-backend.up.railway.app"; // Railway backend
-const WS_URL = "wss://your-backend.up.railway.app";
-
-// ============================
-// Theme
-// ============================
+// ========== CONFIG ==========
+const HTTP_BASE = "https://boundless-backend-vo5t.onrender.com"; // Replace with your Render backend
+const WS_URL = HTTP_BASE.replace(/^http/, "ws");
 let themeMode = localStorage.getItem('ph_theme') || 'auto';
+
+// ========== THEME ==========
 function applyTheme(mode){
   document.documentElement.setAttribute('data-theme',
     mode==='auto'? (window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark') : mode
@@ -185,72 +175,38 @@ document.getElementById('themeSelect').addEventListener('change', e=>{
   applyTheme(themeMode);
 });
 
-// ============================
-// Leaderboard (Google Apps Script)
-// ============================
+// ========== LEADERBOARD ==========
+const apiUrl = "https://script.google.com/macros/s/AKfycbwOtTP8TgoM6URjfUNLqK0962-wRAP4IDHlKQApNvpov6dH7A7fxmrKSZ45hg_mKGBIaA/exec";
 let mergedData = [], allData = [];
 
 async function fetchAll(){
-  const chars = ['Nami','Pia','FREDDIE','HAE'];
-  const reqs = chars.map(c =>
-    fetch(`${apiUrl}?leaderboard=${c}`)
-      .then(r=>r.json())
-      .catch(()=>[])
-  );
+  const chars=['Nami','Pia','FREDDIE','HAE'];
+  const reqs = chars.map(c=>fetch(apiUrl+'?leaderboard='+c).then(r=>r.json()).catch(()=>[]));
   const res = await Promise.all(reqs);
-  const flat = res.flatMap((arr,i) =>
-    (arr||[]).map(p => ({
-      id: p.id,
-      name: p.name,
-      hours: Number(p.hours),
-      character: chars[i]
-    }))
-  );
+  const flat = res.flatMap((arr,i)=> (arr||[]).map(p=>({id:p.id,name:p.name,hours:Number(p.hours),character:chars[i]})));
   allData = flat;
-
   const map = new Map();
-  flat.forEach(p => {
-    if(!map.has(p.id) || p.hours > map.get(p.id).hours) map.set(p.id,p);
-  });
+  flat.forEach(p=>{ if(!map.has(p.id) || p.hours>map.get(p.id).hours) map.set(p.id,p); });
   mergedData = [...map.values()];
 }
 
 function renderLeaderboard(char){
   const box = document.getElementById('leaderboardDiv');
-  box.innerHTML = '';
-  const list = mergedData.filter(p => p.character===char)
-                         .sort((a,b)=>b.hours-a.hours)
-                         .slice(0,10);
-
+  box.innerHTML='';
+  const list = mergedData.filter(p=>p.character===char).sort((a,b)=>b.hours-a.hours).slice(0,10);
   const html = list.map((p,i)=>`
     <div class="player">
       <div style="width:30px;text-align:right;margin-right:10px;font-weight:600;color:var(--muted)">${i+1}.</div>
-      <div style="flex:1">${p.name}<br><span style='font-size:12px;color:var(--muted)'>ID: ${p.id}</span></div>
+      <div style="flex:1">${p.name}<br><span style="font-size:12px;color:var(--muted)">ID: ${p.id}</span></div>
       <div>${p.hours.toFixed(2)} hrs</div>
     </div>`).join('');
   box.innerHTML = html;
 }
 
-// Search
-document.getElementById('mainSearch').addEventListener('input', e=>{
-  const q = e.target.value.toLowerCase();
-  const box = document.getElementById('leaderboardDiv');
-  const list = allData.filter(p => p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q)).slice(0,20);
-  const html = list.map((p,i)=>`
-    <div class="player">
-      <div style="width:30px;text-align:right;margin-right:10px;font-weight:600;color:var(--muted)">${i+1}.</div>
-      <div style="flex:1">${p.name}<br><span style='font-size:12px;color:var(--muted)'>ID: ${p.id} • ${p.character}</span></div>
-      <div>${p.hours.toFixed(2)} hrs</div>
-    </div>`).join('');
-  box.innerHTML = html;
-});
-
-fetchAll().then(()=>renderLeaderboard('Nami'));
 document.getElementById('charSelect').addEventListener('change', e=>renderLeaderboard(e.target.value));
+fetchAll().then(()=>renderLeaderboard('Nami'));
 
-// ============================
-// PC Tracker
-// ============================
+// ========== PC TRACKER ==========
 const pcsContainer = document.getElementById('pcs');
 
 function renderPCs(pcs){
@@ -259,14 +215,9 @@ function renderPCs(pcs){
     const {status, updatedBy, updatedAt} = pcs[pc];
     const card = document.createElement('div');
     card.className='pc-card';
-
-    let statusClass = 'unknown';
-    if(status?.toLowerCase() === 'free') statusClass = 'free';
-    else if(status?.toLowerCase() === 'occupied') statusClass = 'occupied';
-
     card.innerHTML=`
       <div class="pc-title">${pc}</div>
-      <div class="pc-status ${statusClass}"><b>Status:</b> ${status || "—"}</div>
+      <div class="pc-status"><b>Status:</b> ${status}</div>
       <div><b>By:</b> ${updatedBy || "—"}</div>
       <div><b>At:</b> ${updatedAt ? new Date(updatedAt).toLocaleString() : "—"}</div>
       <div>
@@ -282,13 +233,10 @@ function renderPCs(pcs){
 const ws = new WebSocket(WS_URL);
 ws.onopen = () => console.log('WS connected');
 ws.onmessage = ev => {
-  try{
-    const msg = JSON.parse(ev.data);
-    if(msg.type==='state') renderPCs(msg.data);
-  } catch(e){ console.error(e); }
+  try { const msg = JSON.parse(ev.data); if(msg.type==='state') renderPCs(msg.data); } catch(e){console.error(e);}
 };
 
-// Fetch initial PC state
+// Initial fetch
 async function loadInitial(){
   try{
     const res = await fetch(`${HTTP_BASE}/pcs`);
@@ -307,7 +255,7 @@ async function updatePC(pc, status){
     await fetch(`${HTTP_BASE}/update`,{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({pc,status,updatedBy:name || null})
+      body: JSON.stringify({pc,status,updatedBy:name||null})
     });
   } catch(e){ console.error(e); alert("Failed to update PC"); }
 }
