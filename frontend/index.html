@@ -1,97 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Player Hours — Leaderboard</title>
 <style>
-:root {
-  --bg:#0d1117;
-  --card:#0f1720;
-  --muted:#9aa4b2;
-  --accent:#58a6ff;
-  --accent-2:#1f6feb;
-  --glass: rgba(255,255,255,0.03);
-  --text:#e6edf3;
+:root{
+  --bg:#0d1117; --card:#0f1720; --muted:#9aa4b2; --accent:#58a6ff; --accent-2:#1f6feb; --glass: rgba(255,255,255,0.03); --text:#e6edf3;
 }
 [data-theme="light"] {
-  --bg:#f5f7fa;
-  --card:#ffffff;
-  --muted:#5b6b78;
-  --accent:#1a73e8;
-  --accent-2:#1558b8;
+  --bg: #f5f7fa;
+  --card: #ffffff;
+  --muted: #5b6b78;
+  --accent: #1a73e8;
+  --accent-2: #1558b8;
   --glass: rgba(0,0,0,0.03);
-  --text:#1a1a1a;
+  --text: #1a1a1a;
 }
 body {
-  margin:0;
-  font-family:Inter,sans-serif;
-  background:var(--bg);
-  color:var(--text);
-  display:flex;
-  justify-content:center;
-  padding:16px;
+  margin:0;font-family:Inter,sans-serif;background:var(--bg);color:var(--text);display:flex;justify-content:center;padding:16px;
 }
-.app {
-  width:100%;
-  max-width:960px;
-  display:flex;
-  flex-direction:column;
-  gap:16px;
-}
-.topbar {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  flex-wrap:wrap;
-  gap:8px;
-}
-.search input {
-  width:100%;
-  padding:10px 12px;
-  border-radius:10px;
-  border:1px solid var(--glass);
-  font-size:14px;
-  background:var(--card);
-  color:inherit;
-}
-.theme-select {
-  padding:10px;
-  border-radius:10px;
-  background:var(--card);
-  color:inherit;
-  border:1px solid var(--glass);
-}
-.card {
-  background:var(--card);
-  padding:14px;
-  border-radius:12px;
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
-.leaderboard {
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-}
-.player {
-  display:flex;
-  align-items:center;
-  padding:10px;
-  border-radius:10px;
-  background:var(--glass);
-}
-.button {
-  padding:8px 14px;
-  border-radius:10px;
-  border:none;
-  background:var(--accent);
-  color:#fff;
-  cursor:pointer;
-  font-weight:600;
-}
-.button:hover { background: var(--accent-2); }
+.app{width:100%;max-width:960px;display:flex;flex-direction:column;gap:16px;}
+.topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+.search input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--glass);font-size:14px;background:var(--card);color:inherit;}
+.theme-select{padding:10px;border-radius:10px;background:var(--card);color:inherit;border:1px solid var(--glass);}
+.card{background:var(--card);padding:14px;border-radius:12px;display:flex;flex-direction:column;gap:12px;}
+.leaderboard{display:flex;flex-direction:column;gap:8px;}
+.player{display:flex;align-items:center;padding:10px;border-radius:10px;background:var(--glass);}
+.button{padding:8px 14px;border-radius:10px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-weight:600;}
+.button:hover{background:var(--accent-2);}
+@media(max-width:800px){.app{flex-direction:column;} .topbar{flex-direction:column;} .card{flex-direction:column;}}
+
 </style>
 </head>
 <body>
@@ -111,10 +50,14 @@ body {
 
   <!-- Leaderboard Card -->
   <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
       <h3>Leaderboard</h3>
-      <a href="pc-tracker.html"><button class="button">PC Tracker</button></a>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <a href="20plus.html"><button class="button">Top Players 20+</button></a>
+        <a href="pc-tracker.html"><button class="button">PC Tracker</button></a>
+      </div>
     </div>
+
     <select id="charSelect" class="theme-select">
       <option value="Nami">Nami</option>
       <option value="Pia">Pia</option>
@@ -123,11 +66,10 @@ body {
     </select>
     <div id="leaderboardDiv" class="leaderboard"></div>
   </div>
-
 </div>
 
 <script>
-const apiUrl = "https://script.google.com/macros/s/AKfycbwOtTP8TgoM6URjfUNLqK0962-wRAP4IDHlKQApNvpov6dH7A7fxmrKSZ45hg_mKGBIaA/exec"; // your Google Apps Script
+const apiUrl = "https://script.google.com/macros/s/AKfycbwOtTP8TgoM6URjfUNLqK0962-wRAP4IDHlKQApNvpov6dH7A7fxmrKSZ45hg_mKGBIaA/exec"; // Update with your GAS URL
 let mergedData = [], allData = [], themeMode = localStorage.getItem('ph_theme') || 'auto';
 
 // ============================
@@ -149,62 +91,54 @@ document.getElementById('themeSelect').addEventListener('change', e=>{
 // ============================
 // Helpers
 // ============================
-function numberFmt(n){ return (Number(n)||0).toFixed(2); }
-function escapeHtml(s){ return String(s).replace(/</g,'&lt;'); }
+function numberFmt(n){return (Number(n)||0).toFixed(2);}
+function escapeHtml(s){return String(s).replace(/</g,'&lt;');}
 
 // ============================
-// Fetch Leaderboard
+// Fetch data
 // ============================
 async function fetchAll(){
   const chars=['Nami','Pia','FREDDIE','HAE'];
-  const reqs = chars.map(c =>
-    fetch(apiUrl+'?leaderboard='+c)
-      .then(r=>r.json())
-      .catch(()=>[])
-  );
+  const reqs = chars.map(c => fetch(apiUrl+'?leaderboard='+c).then(r=>r.json()).catch(()=>[]));
   const res = await Promise.all(reqs);
-  const flat = res.flatMap((arr,i) =>
-    (arr||[]).map(p=>({id:p.id,name:p.name,hours:Number(p.hours),character:chars[i]}))
-  );
-  allData = flat;
-  const map = new Map();
-  flat.forEach(p => {
-    if(!map.has(p.id) || p.hours>map.get(p.id).hours) map.set(p.id,p);
-  });
-  mergedData = [...map.values()];
+  const flat = res.flatMap((arr,i)=>(arr||[]).map(p=>({id:p.id,name:p.name,hours:Number(p.hours),character:chars[i]})));
+  allData=flat;
+  const map=new Map();
+  flat.forEach(p=>{if(!map.has(p.id)||p.hours>map.get(p.id).hours) map.set(p.id,p);});
+  mergedData=[...map.values()];
 }
 
 // ============================
-// Render Leaderboard
+// Render leaderboard
 // ============================
 function renderLeaderboard(char){
   const box=document.getElementById('leaderboardDiv');
   box.innerHTML='';
-  const list = mergedData.filter(p=>p.character===char).sort((a,b)=>b.hours-a.hours).slice(0,10);
-  const html = list.map((p,i)=>`
+  const list=mergedData.filter(p=>p.character===char).sort((a,b)=>b.hours-a.hours).slice(0,10);
+  const html=list.map((p,i)=>`
     <div class="player">
       <div style="width:30px;text-align:right;margin-right:10px;font-weight:600;color:var(--muted)">${i+1}.</div>
       <div style="flex:1">${escapeHtml(p.name)}<br><span style='font-size:12px;color:var(--muted)'>ID: ${escapeHtml(p.id)}</span></div>
       <div>${numberFmt(p.hours)} hrs</div>
     </div>`).join('');
-  box.innerHTML = html;
+  box.innerHTML=html;
 }
 
 // ============================
 // Search
 // ============================
 function search(q){
-  q = q.toLowerCase();
-  const box = document.getElementById('leaderboardDiv');
-  box.innerHTML = '';
-  const list = allData.filter(p => p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q)).slice(0,20);
-  const html = list.map((p,i)=>`
+  q=q.toLowerCase();
+  const box=document.getElementById('leaderboardDiv');
+  box.innerHTML='';
+  const list=allData.filter(p=>p.name.toLowerCase().includes(q)||p.id.toLowerCase().includes(q)).slice(0,20);
+  const html=list.map((p,i)=>`
     <div class="player">
       <div style="width:30px;text-align:right;margin-right:10px;font-weight:600;color:var(--muted)">${i+1}.</div>
       <div style="flex:1">${escapeHtml(p.name)}<br><span style='font-size:12px;color:var(--muted)'>ID: ${escapeHtml(p.id)} • ${p.character}</span></div>
       <div>${numberFmt(p.hours)} hrs</div>
     </div>`).join('');
-  box.innerHTML = html;
+  box.innerHTML=html;
 }
 
 // ============================
@@ -213,7 +147,6 @@ function search(q){
 fetchAll().then(()=>renderLeaderboard('Nami'));
 document.getElementById('charSelect').addEventListener('change', e=>renderLeaderboard(e.target.value));
 document.getElementById('mainSearch').addEventListener('input', e=>search(e.target.value));
-
 </script>
 </body>
 </html>
