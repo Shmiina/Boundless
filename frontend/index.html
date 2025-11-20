@@ -126,10 +126,10 @@ document.getElementById('mainSearch').addEventListener('input', e=>{
 fetchAll().then(()=>renderLeaderboard('Nami'));
 
 // -------------------- PC Tracker --------------------
-const BACKEND_PORT = 8080;
-const BACKEND_HOST = location.hostname || 'localhost';
-const HTTP_BASE = `http://${BACKEND_HOST}:${BACKEND_PORT}`;
-const WS_URL = `ws://${BACKEND_HOST}:${BACKEND_PORT}`;
+const BACKEND_HOST = "your-backend.up.railway.app";
+const BACKEND_PORT = 80; // or omit for https/ws
+const HTTP_BASE = `https://${BACKEND_HOST}`;
+const WS_URL = `wss://${BACKEND_HOST}`;
 
 const pcsContainer = document.getElementById('pcs');
 

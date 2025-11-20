@@ -1,9 +1,9 @@
 {
   "pcs": {
     "PC1": {
-      "status": "free",
-      "updatedBy": null,
-      "updatedAt": "2025-11-20T02:20:33.290Z"
+      "status": "occupied",
+      "updatedBy": "S",
+      "updatedAt": "2025-11-20T02:52:02.915Z"
     },
     "PC2": {
       "status": "free",
