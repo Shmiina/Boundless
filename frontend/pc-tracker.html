@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PC Occupancy Tracker</title>
+<title>PC Tracker</title>
 <style>
 :root {
   --bg:#0d1117;
@@ -47,6 +47,7 @@ body {
   flex-direction:column;
   gap:12px;
 }
+h3 { margin:0; margin-bottom:10px; }
 .pcs-grid {
   display:grid;
   grid-template-columns: repeat(auto-fit, minmax(180px,1fr));
@@ -63,196 +64,125 @@ body {
 .btn {
   padding:6px 10px;
   border:none;
-  background: var(--accent);
+  background:var(--accent);
   color:#fff;
   border-radius:4px;
   cursor:pointer;
+  font-size:14px;
   margin-right:6px;
 }
 .btn:hover { background: var(--accent-2); }
-.report-table {
-  width:100%;
-  border-collapse: collapse;
-  margin-top:12px;
-}
-.report-table th, .report-table td {
-  border:1px solid var(--glass);
-  padding:8px;
-  text-align:center;
-}
-.nav-buttons {
+
+.top-buttons {
   display:flex;
   gap:10px;
-  flex-wrap:wrap;
-  margin-bottom:10px;
+  margin-bottom:12px;
+  flex-wrap: wrap;
 }
 </style>
 </head>
 <body>
 <div class="app">
+
   <div class="card">
-    <h2>PC Occupancy Tracker</h2>
-
-    <div class="nav-buttons">
-      <button class="btn" onclick="location.href='index.html'">Leaderboard</button>
-      <button class="btn" onclick="location.href='20plus.html'">Top 20+ Hours</button>
-      <button class="btn" id="yesterdayReportBtn">Yesterday's Downtime Report</button>
-      <button class="btn" id="resetNowBtn">Reset Now</button>
+    <h3>PC Occupancy Tracker</h3>
+    <div class="top-buttons">
+      <button class="btn" id="btnYesterday">Yesterday's Report</button>
+      <button class="btn" id="btnReset">Reset Today</button>
+      <button class="btn" onclick="window.location.href='index.html'">Leaderboard</button>
+      <button class="btn" onclick="window.location.href='20plus.html'">Top 20+ Hours</button>
     </div>
-
     <div id="pcs" class="pcs-grid">Loading...</div>
-    <button id="generateReport" class="btn" style="margin-top:10px;">Today's Report</button>
-    <div id="reportContainer"></div>
   </div>
+
 </div>
 
 <script>
-// ============================
-// Config
-// ============================
-const HTTP_BASE = "https://boundless-backend-vo5t.onrender.com"; // Your Render backend
-const WS_URL = "wss://boundless-backend-vo5t.onrender.com";
-
-// ============================
-// Render PCs
-// ============================
+const HTTP_BASE = "https://boundless-backend-vo5t.onrender.com"; // Replace with your Railway backend
 const pcsContainer = document.getElementById("pcs");
 
+// Render PCs
 function renderPCs(pcs) {
   pcsContainer.innerHTML = '';
-  Object.keys(pcs).forEach(pc => {
-    const { status, updatedBy, updatedAt } = pcs[pc];
-    const card = document.createElement("div");
-    card.className = "pc-card";
+  Object.keys(pcs).forEach(pcName => {
+    const pc = pcs[pcName];
+    const card = document.createElement('div');
+    card.className = 'pc-card';
     card.innerHTML = `
-      <div class="pc-title">${pc}</div>
-      <div class="pc-status"><b>Status:</b> ${status}</div>
-      <div><b>By:</b> ${updatedBy || "—"}</div>
-      <div><b>At:</b> ${updatedAt ? new Date(updatedAt).toLocaleString() : "—"}</div>
-      <div>
-        <button class="btn" onclick="updatePC('${pc}','occupied')">Occupied</button>
-        <button class="btn" onclick="updatePC('${pc}','free')">Free</button>
+      <div class="pc-title">${pcName}</div>
+      <div class="pc-status"><b>Status:</b> ${pc.status}</div>
+      <div><b>By:</b> ${pc.updatedBy || '—'}</div>
+      <div><b>At:</b> ${pc.updatedAt ? new Date(pc.updatedAt).toLocaleString() : '—'}</div>
+      <div><b>Uptime:</b> ${pc.totalUptime.toFixed(2)} hrs</div>
+      <div><b>Downtime:</b> ${pc.totalDowntime.toFixed(2)} hrs</div>
+      <div style="margin-top:6px;">
+        <button class="btn" onclick="updatePC('${pcName}','occupied')">Occupied</button>
+        <button class="btn" onclick="updatePC('${pcName}','free')">Free</button>
       </div>
     `;
     pcsContainer.appendChild(card);
   });
 }
 
-// ============================
-// WebSocket
-// ============================
-const ws = new WebSocket(WS_URL);
-ws.onopen = () => console.log("WS connected");
-ws.onmessage = ev => {
-  try {
-    const msg = JSON.parse(ev.data);
-    if(msg.type==='state') renderPCs(msg.data);
-  } catch(e) { console.error(e); }
-};
-
-// ============================
-// Fetch initial PC state
-// ============================
-async function loadInitial() {
+// Load initial PC state
+async function loadPCs() {
   try {
     const res = await fetch(`${HTTP_BASE}/pcs`);
     const data = await res.json();
     renderPCs(data);
-  } catch(e) {
-    pcsContainer.innerHTML="<p style='color:red'>Failed to load PC data.</p>";
-    console.error(e);
+  } catch(err) {
+    pcsContainer.innerHTML = "<p style='color:red'>Failed to load PC data.</p>";
+    console.error(err);
   }
 }
 
-// ============================
 // Update PC status
-// ============================
 async function updatePC(pc, status) {
-  let updatedBy = null;
-
-  if(status === "occupied") {
-    updatedBy = prompt("Your name (required to occupy):","");
-    if(!updatedBy) return alert("Name is required to occupy the PC.");
-  }
-
+  const name = status === 'free' ? null : prompt("Your name (optional):","");
   try {
     await fetch(`${HTTP_BASE}/update`, {
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({
-        pc,
-        status,
-        updatedBy: status === "free" ? null : updatedBy
-      })
+      body: JSON.stringify({ pc, status, updatedBy: name })
     });
-  } catch(e){
-    console.error(e);
+    loadPCs();
+  } catch(err){
+    console.error(err);
     alert("Failed to update PC");
   }
 }
 
-// ============================
-// Reports
-// ============================
-document.getElementById("generateReport").addEventListener("click", async () => {
-  await generateReport("today");
-});
-
-document.getElementById("yesterdayReportBtn").addEventListener("click", async () => {
-  await generateReport("yesterday");
-});
-
-async function generateReport(day) {
+// Yesterday's report
+document.getElementById('btnYesterday').addEventListener('click', async () => {
   try {
-    const res = await fetch(`${HTTP_BASE}/report?day=${day}`);
-    const data = await res.json();
-    let html = `<table class="report-table"><tr><th>PC</th><th>Total Uptime</th><th>Total Downtime</th></tr>`;
-    Object.keys(data).forEach(pc => {
-      html += `<tr><td>${pc}</td><td>${data[pc].totalUptime}</td><td>${data[pc].totalDowntime}</td></tr>`;
+    const res = await fetch(`${HTTP_BASE}/report?day=yesterday`);
+    const report = await res.json();
+    let msg = '';
+    Object.keys(report).forEach(pc => {
+      msg += `${pc}: Uptime ${report[pc].totalUptime} hrs | Downtime ${report[pc].totalDowntime} hrs\n`;
     });
-    html += "</table>";
-    document.getElementById("reportContainer").innerHTML = html;
-  } catch(e) {
-    console.error(e);
-    alert(`Failed to generate ${day} report`);
+    alert(msg || 'No data for yesterday');
+  } catch(err){
+    console.error(err);
+    alert('Failed to fetch yesterday report');
   }
-}
+});
 
-// ============================
-// Auto Reset at Midnight
-// ============================
-function scheduleReset() {
-  const now = new Date();
-  const nextMidnight = new Date();
-  nextMidnight.setHours(24,0,0,0); // next midnight
-  const msToMidnight = nextMidnight - now;
-
-  setTimeout(async () => {
+// Reset button
+document.getElementById('btnReset').addEventListener('click', async () => {
+  if(confirm("Are you sure you want to reset all PCs for today?")) {
     try {
       await fetch(`${HTTP_BASE}/reset`, { method:"POST" });
-      console.log("PCs reset at midnight");
-      loadInitial();
-    } catch(e){ console.error(e); }
-
-    // Schedule next reset
-    scheduleReset();
-  }, msToMidnight);
-}
-
-// Manual reset button
-document.getElementById("resetNowBtn").addEventListener("click", async () => {
-  try {
-    await fetch(`${HTTP_BASE}/reset`, { method:"POST" });
-    alert("PCs manually reset");
-    loadInitial();
-  } catch(e){ console.error(e); alert("Failed to reset"); }
+      loadPCs();
+      alert("PCs reset successfully");
+    } catch(err){
+      console.error(err);
+      alert("Failed to reset PCs");
+    }
+  }
 });
 
-// ============================
-// Initial load
-// ============================
-loadInitial();
-scheduleReset();
+loadPCs();
 </script>
 </body>
 </html>
