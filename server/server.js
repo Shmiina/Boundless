@@ -6,19 +6,25 @@ const WebSocket = require("ws");
 const { Low } = require('lowdb');
 const { JSONFile } = require('lowdb/node');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Database setup with default data for lowdb v6+
+// Database setup
 const file = path.join(__dirname, 'db.json');
 const adapter = new JSONFile(file);
 const db = new Low(adapter);
 
+// Ensure db.json exists
+if (!fs.existsSync(file)) {
+  fs.writeFileSync(file, JSON.stringify({ pcs: {} }, null, 2));
+}
+
+// Initialize DB with defaults if missing
 async function initDb() {
   await db.read();
-  // Initialize default data if missing
   db.data ||= { pcs: {
     PC1: { status: 'free', updatedBy: null, updatedAt: null },
     PC2: { status: 'free', updatedBy: null, updatedAt: null },
@@ -27,38 +33,39 @@ async function initDb() {
   await db.write();
 }
 
-// Initialize DB before starting server
+// Start server after DB initialization
 initDb().then(() => {
-
   const server = http.createServer(app);
   const wss = new WebSocket.Server({ server });
 
-  // Broadcast PC state to all WS clients
-  function broadcastState() {
+  // Broadcast PC state
+  async function broadcastState() {
+    await db.read();
     const payload = JSON.stringify({ type: "state", data: db.data.pcs });
     wss.clients.forEach(client => {
       if (client.readyState === WebSocket.OPEN) client.send(payload);
     });
   }
 
-  wss.on("connection", ws => {
-    console.log("WS client connected");
+  wss.on("connection", async ws => {
+    await db.read();
     ws.send(JSON.stringify({ type: "state", data: db.data.pcs }));
+    console.log("WS client connected");
   });
 
-  // Endpoint: get current PCs
+  // Get current PCs
   app.get("/pcs", async (req, res) => {
     await db.read();
     res.json(db.data.pcs);
   });
 
-  // Endpoint: update PC status
+  // Update PC status
   app.post("/update", async (req, res) => {
     const { pc, status, updatedBy } = req.body;
     if (!pc || !status) return res.status(400).json({ error: "pc and status required" });
 
     await db.read();
-    if (!db.data.pcs[pc]) return res.status(400).json({ error: "pc not found" });
+    db.data.pcs[pc] ||= { status: 'free', updatedBy: null, updatedAt: null }; // create if missing
 
     db.data.pcs[pc] = {
       status,
@@ -67,16 +74,14 @@ initDb().then(() => {
     };
 
     await db.write();
-    broadcastState();
+    await broadcastState();
 
     res.json({ ok: true });
   });
 
-  // Serve frontend static files from repo root
+  // Serve frontend static files
   app.use('/', express.static(path.join(__dirname, '..')));
 
-  // Use Render's PORT environment variable
   const PORT = process.env.PORT || 8080;
   server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
 });
