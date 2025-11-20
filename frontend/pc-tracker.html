@@ -167,20 +167,6 @@ document.getElementById('btnYesterday').addEventListener('click', async () => {
   }
 });
 
-// Reset button
-document.getElementById('btnReset').addEventListener('click', async () => {
-  if(confirm("Are you sure you want to reset all PCs for today?")) {
-    try {
-      await fetch(`${HTTP_BASE}/reset`, { method:"POST" });
-      loadPCs();
-      alert("PCs reset successfully");
-    } catch(err){
-      console.error(err);
-      alert("Failed to reset PCs");
-    }
-  }
-});
-
 loadPCs();
 </script>
 </body>
