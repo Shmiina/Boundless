@@ -105,7 +105,11 @@ body {
   border-radius:8px;
 }
 .pc-title { font-size:18px; font-weight:600; margin-bottom:6px; }
-.pc-status { font-size:14px; margin-bottom:6px; }
+.pc-status { font-size:14px; margin-bottom:6px; font-weight:600; }
+.pc-status.free { color: #28a745; }       /* green */
+.pc-status.occupied { color: #dc3545; }   /* red */
+.pc-status.unknown { color: #6c757d; }    /* gray */
+
 .btn {
   padding:6px 10px;
   border:1px solid var(--accent);
@@ -222,7 +226,7 @@ function renderLeaderboard(char){
     <div class="player">
       <div style="width:30px;text-align:right;margin-right:10px;font-weight:600;color:var(--muted)">${i+1}.</div>
       <div style="flex:1">${p.name}<br><span style='font-size:12px;color:var(--muted)'>ID: ${p.id}</span></div>
-      <div>${p.hours} hrs</div>
+      <div>${p.hours.toFixed(2)} hrs</div>
     </div>`).join('');
   box.innerHTML = html;
 }
@@ -236,7 +240,7 @@ document.getElementById('mainSearch').addEventListener('input', e=>{
     <div class="player">
       <div style="width:30px;text-align:right;margin-right:10px;font-weight:600;color:var(--muted)">${i+1}.</div>
       <div style="flex:1">${p.name}<br><span style='font-size:12px;color:var(--muted)'>ID: ${p.id} • ${p.character}</span></div>
-      <div>${p.hours} hrs</div>
+      <div>${p.hours.toFixed(2)} hrs</div>
     </div>`).join('');
   box.innerHTML = html;
 });
@@ -255,9 +259,14 @@ function renderPCs(pcs){
     const {status, updatedBy, updatedAt} = pcs[pc];
     const card = document.createElement('div');
     card.className='pc-card';
+
+    let statusClass = 'unknown';
+    if(status?.toLowerCase() === 'free') statusClass = 'free';
+    else if(status?.toLowerCase() === 'occupied') statusClass = 'occupied';
+
     card.innerHTML=`
       <div class="pc-title">${pc}</div>
-      <div class="pc-status"><b>Status:</b> ${status}</div>
+      <div class="pc-status ${statusClass}"><b>Status:</b> ${status || "—"}</div>
       <div><b>By:</b> ${updatedBy || "—"}</div>
       <div><b>At:</b> ${updatedAt ? new Date(updatedAt).toLocaleString() : "—"}</div>
       <div>
