@@ -1,173 +1,209 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>PC Tracker</title>
+
 <style>
 :root {
   --bg:#0d1117;
-  --card:#0f1720;
-  --muted:#9aa4b2;
-  --accent:#58a6ff;
-  --accent-2:#1f6feb;
-  --glass: rgba(255,255,255,0.03);
+  --card:#161b22;
   --text:#e6edf3;
+  --muted:#8b949e;
+  --glass:rgba(255,255,255,0.05);
+  --blue:#1f6feb;
+  --blue-hover:#388bfd;
 }
 [data-theme="light"] {
   --bg:#f5f7fa;
   --card:#ffffff;
-  --muted:#5b6b78;
-  --accent:#1a73e8;
-  --accent-2:#1558b8;
-  --glass: rgba(0,0,0,0.03);
   --text:#1a1a1a;
+  --muted:#6b7280;
+  --glass:rgba(0,0,0,0.05);
+  --blue:#1a73e8;
+  --blue-hover:#185ec4;
 }
 body {
   margin:0;
-  font-family:Inter,sans-serif;
+  font-family:Inter, sans-serif;
   background:var(--bg);
   color:var(--text);
+  padding:20px;
   display:flex;
   justify-content:center;
-  padding:16px;
 }
-.app {
+.container {
   width:100%;
-  max-width:960px;
-  display:flex;
-  flex-direction:column;
-  gap:16px;
+  max-width:920px;
 }
-.card {
-  background:var(--card);
-  padding:14px;
-  border-radius:12px;
-  display:flex;
-  flex-direction:column;
-  gap:12px;
+h2 {
+  margin-top:0;
 }
-h3 { margin:0; margin-bottom:10px; }
-.pcs-grid {
-  display:grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px,1fr));
-  gap:12px;
-}
-.pc-card {
-  background:var(--card);
-  border:1px solid var(--glass);
-  padding:12px;
-  border-radius:8px;
-}
-.pc-title { font-size:18px; font-weight:600; margin-bottom:6px; }
-.pc-status { font-size:14px; margin-bottom:6px; }
-.btn {
-  padding:6px 10px;
-  border:none;
-  background:var(--accent);
-  color:#fff;
-  border-radius:4px;
-  cursor:pointer;
-  font-size:14px;
-  margin-right:6px;
-}
-.btn:hover { background: var(--accent-2); }
-
 .top-buttons {
   display:flex;
   gap:10px;
-  margin-bottom:12px;
-  flex-wrap: wrap;
+  margin-bottom:16px;
+  flex-wrap:wrap;
+}
+.navbtn {
+  background:var(--blue);
+  border:none;
+  color:white;
+  padding:10px 14px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:600;
+}
+.navbtn:hover { background:var(--blue-hover); }
+
+.pc-grid {
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap:14px;
+}
+.pc-card {
+  background:var(--card);
+  padding:14px;
+  border-radius:10px;
+  border:1px solid var(--glass);
+}
+.pc-card h3 {
+  margin:0 0 6px 0;
+}
+.small {
+  color:var(--muted);
+  font-size:13px;
+}
+.btn-row {
+  margin-top:8px;
+}
+.action {
+  background:var(--blue);
+  border:none;
+  padding:6px 10px;
+  color:white;
+  border-radius:6px;
+  cursor:pointer;
+  margin-right:6px;
+  font-size:14px;
+}
+.action:hover {
+  background:var(--blue-hover);
 }
 </style>
 </head>
-<body>
-<div class="app">
 
-  <div class="card">
-    <h3>PC Occupancy Tracker</h3>
-    <div class="top-buttons">
-      <button class="btn" id="btnYesterday">Yesterday's Report</button>
-      <button class="btn" onclick="window.location.href='index.html'">Leaderboard</button>
-      <button class="btn" onclick="window.location.href='20plus.html'">Top 20+ Hours</button>
-    </div>
-    <div id="pcs" class="pcs-grid">Loading...</div>
+<body>
+<div class="container">
+
+  <div class="top-buttons">
+    <button class="navbtn" onclick="window.location.href='index.html'">🏆 Leaderboard</button>
+    <button class="navbtn" onclick="window.location.href='20hours.html'">⏳ 20+ Hours</button>
+    <button class="navbtn" onclick="openYesterday()">📄 Yesterday Report</button>
   </div>
+
+  <h2>PC Occupancy Tracker</h2>
+  <div id="pcGrid" class="pc-grid">Loading...</div>
 
 </div>
 
 <script>
-const HTTP_BASE = "https://boundless-backend-vo5t.onrender.com"; // Replace with your Railway backend
-const pcsContainer = document.getElementById("pcs");
+// =======================================================
+// CONFIG
+// =======================================================
+const BACKEND = "https://boundless-backend-vo5t.onrender.com"; // CHANGE THIS
+const WS_URL = BACKEND.replace("https://", "wss://");
 
-// Render PCs
-function renderPCs(pcs) {
-  pcsContainer.innerHTML = '';
-  Object.keys(pcs).forEach(pcName => {
-    const pc = pcs[pcName];
-    const card = document.createElement('div');
-    card.className = 'pc-card';
+// =======================================================
+// THEME AUTO
+// =======================================================
+(function(){
+  const prefersLight = window.matchMedia("(prefers-color-scheme: light)").matches;
+  document.documentElement.setAttribute("data-theme", prefersLight ? "light" : "dark");
+})();
+
+// =======================================================
+// LOAD PCs
+// =======================================================
+async function loadPCs() {
+  try {
+    const res = await fetch(`${BACKEND}/pcs`);
+    const pcs = await res.json();
+    renderPCs(pcs);
+  } catch (err) {
+    pcGrid.innerHTML = "<p style='color:red'>Failed to load.</p>";
+  }
+}
+
+function renderPCs(pcs){
+  const grid = document.getElementById("pcGrid");
+  grid.innerHTML = "";
+
+  pcs.forEach(pc => {
+    const card = document.createElement("div");
+    card.className = "pc-card";
+
     card.innerHTML = `
-      <div class="pc-title">${pcName}</div>
-      <div class="pc-status"><b>Status:</b> ${pc.status}</div>
-      <div><b>By:</b> ${pc.updatedBy || '—'}</div>
-      <div><b>At:</b> ${pc.updatedAt ? new Date(pc.updatedAt).toLocaleString() : '—'}</div>
-      <div><b>Uptime:</b> ${pc.totalUptime.toFixed(2)} hrs</div>
-      <div><b>Downtime:</b> ${pc.totalDowntime.toFixed(2)} hrs</div>
-      <div style="margin-top:6px;">
-        <button class="btn" onclick="updatePC('${pcName}','occupied')">Occupied</button>
-        <button class="btn" onclick="updatePC('${pcName}','free')">Free</button>
+      <h3>${pc.name}</h3>
+      <div>Status: <b>${pc.status}</b></div>
+      <div class="small">By: ${pc.updated_by || "—"}</div>
+      <div class="small">At: ${pc.updated_at ? new Date(pc.updated_at).toLocaleString() : "—"}</div>
+      <div class="small">Uptime: ${pc.total_uptime.toFixed(2)} hrs</div>
+      <div class="small">Downtime: ${pc.total_downtime.toFixed(2)} hrs</div>
+
+      <div class="btn-row">
+        <button class="action" onclick="updatePC('${pc.name}','occupied')">Occupied</button>
+        <button class="action" onclick="updatePC('${pc.name}','free')">Free</button>
       </div>
     `;
-    pcsContainer.appendChild(card);
+
+    grid.appendChild(card);
   });
 }
 
-// Load initial PC state
-async function loadPCs() {
-  try {
-    const res = await fetch(`${HTTP_BASE}/pcs`);
-    const data = await res.json();
-    renderPCs(data);
-  } catch(err) {
-    pcsContainer.innerHTML = "<p style='color:red'>Failed to load PC data.</p>";
-    console.error(err);
+async function updatePC(name, status){
+  let updatedBy = null;
+
+  if (status === "occupied") {
+    updatedBy = prompt("Enter your name:");
   }
+
+  await fetch(`${BACKEND}/update`, {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ pc:name, status, updatedBy })
+  });
 }
 
-// Update PC status
-async function updatePC(pc, status) {
-  const name = status === 'free' ? null : prompt("Your name (optional):","");
-  try {
-    await fetch(`${HTTP_BASE}/update`, {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ pc, status, updatedBy: name })
-    });
-    loadPCs();
-  } catch(err){
-    console.error(err);
-    alert("Failed to update PC");
-  }
+// =======================================================
+// Yesterday Report
+// =======================================================
+async function openYesterday(){
+  const res = await fetch(`${BACKEND}/yesterday`);
+  const data = await res.json();
+
+  let text = "YESTERDAY REPORT:\n\n";
+  data.forEach(pc => {
+    text += `${pc.name} — Uptime: ${pc.total_uptime.toFixed(2)} hrs | Downtime: ${pc.total_downtime.toFixed(2)} hrs\n`;
+  });
+
+  alert(text);
 }
 
-// Yesterday's report
-document.getElementById('btnYesterday').addEventListener('click', async () => {
-  try {
-    const res = await fetch(`${HTTP_BASE}/report?day=yesterday`);
-    const report = await res.json();
-    let msg = '';
-    Object.keys(report).forEach(pc => {
-      msg += `${pc}: Uptime ${report[pc].totalUptime} hrs | Downtime ${report[pc].totalDowntime} hrs\n`;
-    });
-    alert(msg || 'No data for yesterday');
-  } catch(err){
-    console.error(err);
-    alert('Failed to fetch yesterday report');
+// =======================================================
+// WebSocket for Live Updates
+// =======================================================
+const ws = new WebSocket(WS_URL);
+ws.onmessage = (ev) => {
+  const msg = JSON.parse(ev.data);
+  if (msg.type === "state") {
+    renderPCs(msg.data);
   }
-});
+};
 
 loadPCs();
 </script>
+
 </body>
 </html>
