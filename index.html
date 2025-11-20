@@ -3,22 +3,23 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Player Hours — Leaderboard</title>
+<title>Player Hours & PC Tracker</title>
 <style>
 :root{
-  --bg:#0d1117; --card:#0f1720; --muted:#9aa4b2; --accent:#58a6ff; --accent-2:#1f6feb; --glass: rgba(255,255,255,0.03);
+--bg:#0d1117; --card:#0f1720; --muted:#9aa4b2; --accent:#58a6ff; --accent-2:#1f6feb; --glass: rgba(255,255,255,0.05);
+--text:#e6edf3;
 }
 [data-theme="light"] {
-  --bg: #f5f7fa;
-  --card: #ffffff;
-  --muted: #5b6b78;
-  --accent: #1a73e8;
-  --accent-2: #1558b8;
-  --glass: rgba(0,0,0,0.03);
-  --text: #1a1a1a;
-  --border: rgba(0,0,0,0.08);
+--bg: #f5f7fa;
+--card: #ffffff;
+--muted: #5b6b78;
+--accent: #1a73e8;
+--accent-2: #1558b8;
+--text: #1a1a1a;
+--glass: rgba(0,0,0,0.03);
+--border: rgba(0,0,0,0.08);
 }
-body {margin:0;font-family:Inter,sans-serif;background:var(--bg);color:var(--text,#e6edf3);display:flex;justify-content:center;padding:16px;}
+body {margin:0;font-family:Inter,sans-serif;background:var(--bg);color:var(--text);display:flex;justify-content:center;padding:16px;}
 .app{width:100%;max-width:960px;display:flex;flex-direction:column;gap:16px;}
 .topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
 .search input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border,rgba(255,255,255,0.08));font-size:14px;background:var(--card);color:inherit;}
@@ -29,73 +30,60 @@ body {margin:0;font-family:Inter,sans-serif;background:var(--bg);color:var(--tex
 .button{padding:8px 14px;border-radius:10px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-weight:600;}
 .button:hover{background:var(--accent-2);}
 @media(max-width:800px){.app{flex-direction:column;} .topbar{flex-direction:column;} .card{flex-direction:column;}}
-
-.pcs-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
-}
-
-.pc-card {
-  border: 1px solid #ddd;
-  padding: 12px;
-  border-radius: 6px;
-  background: #fff;
-}
-
+.pcs-grid {display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;}
+.pc-card {border: 1px solid var(--border, #444); padding: 12px; border-radius: 6px; background: var(--card); color: var(--text); box-shadow: 0 2px 6px rgba(0,0,0,0.3);}
 .pc-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
 .pc-status { margin-bottom: 8px; font-size: 14px; }
-
-.btn {
-  padding: 6px 10px;
-  border: 1px solid #ccc;
-  background: #f9f9f9;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.btn:hover { background: #ececec; }
-.row { margin-top: 6px; }
-
+.btn { padding: 6px 10px; border: 1px solid var(--border,#ccc); background: var(--accent); color:#fff; border-radius: 4px; cursor: pointer; font-size: 14px; }
+.btn:hover { background: var(--accent-2); }
+.row { margin-top: 6px; display: flex; gap: 6px; justify-content: flex-start; }
 </style>
 </head>
 <body>
 <div class="app">
 
-  <!-- Topbar -->
-  <div class="topbar">
-    <div class="search">
-      <input id="mainSearch" placeholder="Search players...">
-    </div>
-    <select id="themeSelect" class="theme-select">
-      <option value="auto">Auto</option>
-      <option value="dark">Dark</option>
-      <option value="light">Light</option>
-    </select>
-  </div>
 
-  <!-- Leaderboard Card -->
-  <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <h3>Leaderboard</h3>
-      <a href="20plus.html"><button class="button">Top Players 20+</button></a>
-    </div>
-    <select id="charSelect" class="theme-select">
-      <option value="Nami">Nami</option>
-      <option value="Pia">Pia</option>
-      <option value="FREDDIE">Freddie</option>
-      <option value="HAE">Hae</option>
-    </select>
-    <div id="leaderboardDiv" class="leaderboard"></div>
-  </div>
+<!-- Topbar -->
+<div class="topbar">
+<div class="search">
+<input id="mainSearch" placeholder="Search players...">
+</div>
+<select id="themeSelect" class="theme-select">
+<option value="auto">Auto</option>
+<option value="dark">Dark</option>
+<option value="light">Light</option>
+</select>
+</div>
+
+
+<!-- Leaderboard Card -->
+<div class="card">
+<div style="display:flex;justify-content:space-between;align-items:center;">
+<h3>Leaderboard</h3>
+<a href="20plus.html"><button class="button">Top Players 20+</button></a>
+</div>
+<select id="charSelect" class="theme-select">
+<option value="Nami">Nami</option>
+<option value="Pia">Pia</option>
+<option value="FREDDIE">Freddie</option>
+<option value="HAE">Hae</option>
+</select>
+<div id="leaderboardDiv" class="leaderboard"></div>
+</div>
+
+
+<!-- PC Occupancy Tracker -->
+<div class="card">
+<h3>PC Occupancy Tracker</h3>
+<div id="pcs" class="pcs-grid">Loading...</div>
+</div>
+
+
 </div>
 
 <script>
-const apiUrl = "https://script.google.com/macros/s/AKfycbwOtTP8TgoM6URjfUNLqK0962-wRAP4IDHlKQApNvpov6dH7A7fxmrKSZ45hg_mKGBIaA/exec";
-let mergedData = [], allData = [], themeMode = localStorage.getItem('ph_theme') || 'auto';
-
-// Theme
+// -------------------- Theme --------------------
+let themeMode = localStorage.getItem('ph_theme') || 'auto';
 function applyTheme(mode){
   document.documentElement.setAttribute('data-theme',
     mode==='auto'? (window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark') : mode
@@ -107,11 +95,9 @@ document.getElementById('themeSelect').addEventListener('change', e=>{
   themeMode=e.target.value; localStorage.setItem('ph_theme',themeMode); applyTheme(themeMode);
 });
 
-// Helpers
-function numberFmt(n){return (Number(n)||0).toFixed(2);}
-function escapeHtml(s){return String(s).replace(/</g,'&lt;');}
-
-// Fetch
+// -------------------- Leaderboard --------------------
+const apiUrl = "https://script.google.com/macros/s/AKfycbwOtTP8TgoM6URjfUNLqK0962-wRAP4IDHlKQApNvpov6dH7A7fxmrKSZ45hg_mKGBIaA/exec";
+let mergedData = [], allData = [];
 async function fetchAll(){
   const chars=['Nami','Pia','FREDDIE','HAE'];
   const reqs=chars.map(c=>fetch(apiUrl+'?leaderboard='+c).then(r=>r.json()).catch(()=>[]));
@@ -122,139 +108,90 @@ async function fetchAll(){
   flat.forEach(p=>{if(!map.has(p.id)||p.hours>map.get(p.id).hours) map.set(p.id,p);});
   mergedData=[...map.values()];
 }
-
-// Render
 function renderLeaderboard(char){
   const box=document.getElementById('leaderboardDiv');
   box.innerHTML='';
   const list=mergedData.filter(p=>p.character===char).sort((a,b)=>b.hours-a.hours).slice(0,10);
-  const html=list.map((p,i)=>`
-    <div class="player">
-      <div style="width:30px;text-align:right;margin-right:10px;font-weight:600;color:var(--muted)">${i+1}.</div>
-      <div style="flex:1">${escapeHtml(p.name)}<br><span style='font-size:12px;color:var(--muted)'>ID: ${escapeHtml(p.id)}</span></div>
-      <div>${numberFmt(p.hours)} hrs</div>
-    </div>`).join('');
+  const html=list.map((p,i)=>`<div class="player"><div style="width:30px;text-align:right;margin-right:10px;font-weight:600;color:var(--muted)">${i+1}.</div><div style="flex:1">${p.name}<br><span style='font-size:12px;color:var(--muted)'>ID: ${p.id}</span></div><div>${p.hours.toFixed(2)} hrs</div></div>`).join('');
   box.innerHTML=html;
 }
-
-// Search
-function search(q){
-  q=q.toLowerCase();
-  const box=document.getElementById('leaderboardDiv');
-  box.innerHTML='';
-  const list=allData.filter(p=>p.name.toLowerCase().includes(q)||p.id.toLowerCase().includes(q)).slice(0,20);
-  const html=list.map((p,i)=>`
-    <div class="player">
-      <div style="width:30px;text-align:right;margin-right:10px;font-weight:600;color:var(--muted)">${i+1}.</div>
-      <div style="flex:1">${escapeHtml(p.name)}<br><span style='font-size:12px;color:var(--muted)'>ID: ${escapeHtml(p.id)} • ${p.character}</span></div>
-      <div>${numberFmt(p.hours)} hrs</div>
-    </div>`).join('');
-  box.innerHTML=html;
-}
-
-// Initialize
-fetchAll().then(()=>renderLeaderboard('Nami'));
 document.getElementById('charSelect').addEventListener('change', e=>renderLeaderboard(e.target.value));
-document.getElementById('mainSearch').addEventListener('input', e=>search(e.target.value));
+document.getElementById('mainSearch').addEventListener('input', e=>{
+  const q=e.target.value.toLowerCase();
+  const box=document.getElementById('leaderboardDiv');
+  const list=allData.filter(p=>p.name.toLowerCase().includes(q)||p.id.toLowerCase().includes(q)).slice(0,20);
+  const html=list.map((p,i)=>`<div class="player"><div style="width:30px;text-align:right;margin-right:10px;font-weight:600;color:var(--muted)">${i+1}.</div><div style="flex:1">${p.name}<br><span style='font-size:12px;color:var(--muted)'>ID: ${p.id} • ${p.character}</span></div><div>${p.hours.toFixed(2)} hrs</div></div>`).join('');
+  box.innerHTML=html;
+});
+fetchAll().then(()=>renderLeaderboard('Nami'));
 
-</script>
+// -------------------- PC Tracker --------------------
+const BACKEND_PORT = 8080;
+const BACKEND_HOST = location.hostname || 'localhost';
+const HTTP_BASE = `http://${BACKEND_HOST}:${BACKEND_PORT}`;
+const WS_URL = `ws://${BACKEND_HOST}:${BACKEND_PORT}`;
 
-<br><hr><br>
+const pcsContainer = document.getElementById('pcs');
 
-<h1>PC Occupancy Tracker</h1>
-<div class="tracker">
-  <div id="pcs" class="pcs-grid">Loading...</div>
-</div>
-
-<script>
-  // ============================
-  // Config
-  // ============================
-  const BACKEND_PORT = 8080;          // Port where your Node server runs
-  const BACKEND_HOST = location.hostname || "localhost";  // fallback for file://
-  const HTTP_BASE = `http://${BACKEND_HOST}:${BACKEND_PORT}`;  // for fetch requests
-  const WS_URL = `ws://${BACKEND_HOST}:${BACKEND_PORT}`;        // for websocket
-
-  // ============================
-  // WebSocket
-  // ============================
-  const ws = new WebSocket(WS_URL);
-
-  ws.onopen = () => console.log(`WebSocket connected to ${WS_URL}`);
-  ws.onerror = (err) => console.error("WebSocket error:", err);
-  ws.onclose = () => console.warn("WebSocket closed");
-
-  ws.onmessage = (ev) => {
-    try {
-      const msg = JSON.parse(ev.data);
-      if (msg.type === "state") renderPCs(msg.data);
-    } catch(e) {
-      console.error("Failed to parse WebSocket message:", e);
-    }
-  };
-
-  // ============================
-  // Fetch initial PC state
-  // ============================
-  async function loadInitial() {
-    try {
-      const res = await fetch(`${HTTP_BASE}/pcs`);
-      const pcs = await res.json();
-      renderPCs(pcs);
-    } catch(e) {
-      console.error("Failed to fetch /pcs:", e);
-      document.getElementById("pcs").innerHTML = "<p style='color:red'>Failed to load PC data.</p>";
-    }
+// Fetch initial state
+async function loadInitial(){
+  try{
+    const res=await fetch(`${HTTP_BASE}/pcs`);
+    const pcs=await res.json();
+    renderPCs(pcs);
+  }catch(e){
+    console.error('Failed to fetch /pcs:', e);
+    pcsContainer.innerHTML='<p style="color:red">Failed to load PC data.</p>';
   }
+}
 
-  // ============================
-  // Render function
-  // ============================
-  function renderPCs(pcs) {
-    const container = document.getElementById("pcs");
-    container.innerHTML = "";
+function renderPCs(pcs){
+  pcsContainer.innerHTML='';
+  Object.keys(pcs).forEach(pc=>{
+    const { status, updatedBy, updatedAt } = pcs[pc];
+    const card=document.createElement('div');
+    card.className='pc-card';
+    card.innerHTML=`
+      <div class="pc-title">${pc}</div>
+      <div class="pc-status"><b>Status:</b> ${status}</div>
+      <div><b>By:</b> ${updatedBy||'—'}</div>
+      <div><b>At:</b> ${updatedAt?new Date(updatedAt).toLocaleString():'—'}</div>
+      <div class="row">
+        <button class="btn" onclick="updatePC('${pc}','occupied')">Occupied</button>
+        <button class="btn" onclick="updatePC('${pc}','free')">Free</button>
+      </div>
+    `;
+    pcsContainer.appendChild(card);
+  });
+}
 
-    Object.keys(pcs).forEach(pc => {
-      const { status, updatedBy, updatedAt } = pcs[pc];
-      const card = document.createElement("div");
-      card.className = "pc-card";
-
-      card.innerHTML = `
-        <div class="pc-title">${pc}</div>
-        <div class="pc-status"><b>Status:</b> ${status}</div>
-        <div><b>By:</b> ${updatedBy || "—"}</div>
-        <div><b>At:</b> ${updatedAt ? new Date(updatedAt).toLocaleString() : "—"}</div>
-        <div class="row">
-          <button class="btn" onclick="updatePC('${pc}','occupied')">Occupied</button>
-          <button class="btn" onclick="updatePC('${pc}','free')">Free</button>
-        </div>
-      `;
-      container.appendChild(card);
+async function updatePC(pc,status){
+  const name=prompt('Your name (optional):','');
+  try{
+    await fetch(`${HTTP_BASE}/update`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({pc,status,updatedBy:name||null})
     });
+  }catch(e){
+    console.error('Failed to update PC:',e);
+    alert('Failed to update PC.');
   }
+}
 
-  // ============================
-  // Update PC status
-  // ============================
-  async function updatePC(pc, status) {
-    const name = prompt("Your name (optional):", "");
-    try {
-      await fetch(`${HTTP_BASE}/update`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pc, status, updatedBy: name || null })
-      });
-      // UI will auto-update via WebSocket broadcast
-    } catch(e) {
-      console.error("Failed to update PC:", e);
-      alert("Failed to update PC. Check console for details.");
-    }
-  }
+// WebSocket for real-time updates
+const ws=new WebSocket(WS_URL);
+ws.onopen=()=>console.log(`WebSocket connected to ${WS_URL}`);
+ws.onerror=()=>{console.warn('WebSocket failed, falling back to fetch every 5s'); setInterval(loadInitial,5000);};
+ws.onmessage=ev=>{
+  try{
+    const msg=JSON.parse(ev.data);
+    if(msg.type==='state') renderPCs(msg.data);
+  }catch(e){console.error('Failed to parse WS message:',e);}
+};
 
-  // ============================
-  // Initial load
-  // ============================
-  loadInitial();
+// Initial load
+loadInitial();
 </script>
 </body>
 </html>
