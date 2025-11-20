@@ -160,7 +160,8 @@ body {
 // ============================
 // Config
 // ============================
-const HTTP_BASE = "https://your-backend.up.railway.app"; // your Railway backend
+const apiUrl = "https://script.google.com/macros/s/AKfycbwOtTP8TgoM6URjfUNLqK0962-wRAP4IDHlKQApNvpov6dH7A7fxmrKSZ45hg_mKGBIaA/exec"; // Google Apps Script URL
+const HTTP_BASE = "https://your-backend.up.railway.app"; // Railway backend
 const WS_URL = "wss://your-backend.up.railway.app";
 
 // ============================
@@ -181,28 +182,67 @@ document.getElementById('themeSelect').addEventListener('change', e=>{
 });
 
 // ============================
-// Leaderboard (mock data for now)
+// Leaderboard (Google Apps Script)
 // ============================
-let allData = [
-  {id:'1',name:'Alice',hours:12,character:'Nami'},
-  {id:'2',name:'Bob',hours:8,character:'Nami'},
-  {id:'3',name:'Charlie',hours:5,character:'Pia'}
-];
+let mergedData = [], allData = [];
+
+async function fetchAll(){
+  const chars = ['Nami','Pia','FREDDIE','HAE'];
+  const reqs = chars.map(c =>
+    fetch(`${apiUrl}?leaderboard=${c}`)
+      .then(r=>r.json())
+      .catch(()=>[])
+  );
+  const res = await Promise.all(reqs);
+  const flat = res.flatMap((arr,i) =>
+    (arr||[]).map(p => ({
+      id: p.id,
+      name: p.name,
+      hours: Number(p.hours),
+      character: chars[i]
+    }))
+  );
+  allData = flat;
+
+  const map = new Map();
+  flat.forEach(p => {
+    if(!map.has(p.id) || p.hours > map.get(p.id).hours) map.set(p.id,p);
+  });
+  mergedData = [...map.values()];
+}
+
 function renderLeaderboard(char){
   const box = document.getElementById('leaderboardDiv');
   box.innerHTML = '';
-  const list = allData.filter(p=>p.character===char).sort((a,b)=>b.hours-a.hours);
-  list.forEach((p,i)=>{
-    const div = document.createElement('div');
-    div.className='player';
-    div.innerHTML = `<div style="width:30px;text-align:right;margin-right:10px;font-weight:600;color:var(--muted)">${i+1}.</div>
-                     <div style="flex:1">${p.name}<br><span style='font-size:12px;color:var(--muted)'>ID: ${p.id}</span></div>
-                     <div>${p.hours} hrs</div>`;
-    box.appendChild(div);
-  });
+  const list = mergedData.filter(p => p.character===char)
+                         .sort((a,b)=>b.hours-a.hours)
+                         .slice(0,10);
+
+  const html = list.map((p,i)=>`
+    <div class="player">
+      <div style="width:30px;text-align:right;margin-right:10px;font-weight:600;color:var(--muted)">${i+1}.</div>
+      <div style="flex:1">${p.name}<br><span style='font-size:12px;color:var(--muted)'>ID: ${p.id}</span></div>
+      <div>${p.hours} hrs</div>
+    </div>`).join('');
+  box.innerHTML = html;
 }
+
+// Search
+document.getElementById('mainSearch').addEventListener('input', e=>{
+  const q = e.target.value.toLowerCase();
+  const box = document.getElementById('leaderboardDiv');
+  const list = allData.filter(p => p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q)).slice(0,20);
+  const html = list.map((p,i)=>`
+    <div class="player">
+      <div style="width:30px;text-align:right;margin-right:10px;font-weight:600;color:var(--muted)">${i+1}.</div>
+      <div style="flex:1">${p.name}<br><span style='font-size:12px;color:var(--muted)'>ID: ${p.id} • ${p.character}</span></div>
+      <div>${p.hours} hrs</div>
+    </div>`).join('');
+  box.innerHTML = html;
+});
+
+fetchAll().then(()=>renderLeaderboard('Nami'));
 document.getElementById('charSelect').addEventListener('change', e=>renderLeaderboard(e.target.value));
-renderLeaderboard('Nami');
 
 // ============================
 // PC Tracker
@@ -233,10 +273,10 @@ function renderPCs(pcs){
 const ws = new WebSocket(WS_URL);
 ws.onopen = () => console.log('WS connected');
 ws.onmessage = ev => {
-  try {
+  try{
     const msg = JSON.parse(ev.data);
     if(msg.type==='state') renderPCs(msg.data);
-  } catch(e) { console.error(e); }
+  } catch(e){ console.error(e); }
 };
 
 // Fetch initial PC state
