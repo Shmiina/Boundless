@@ -88,7 +88,7 @@ function numberFmt(n){ return (Number(n)||0).toFixed(2); }
 async function fetchData(){
   if(allData.length) return allData; // cache
 
-  const chars=['Nami','Pia','FREDDIE'];
+  const chars=['Nami','Pia','FREDDIE','HAE'];
   const reqs=chars.map(c=>fetch(apiUrl+'?leaderboard='+c).then(r=>r.json()).catch(()=>[]));
   const res=await Promise.all(reqs);
 

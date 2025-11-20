@@ -55,7 +55,8 @@ body {margin:0;font-family:Inter,sans-serif;background:var(--bg);color:var(--tex
     <select id="charSelect" class="theme-select">
       <option value="Nami">Nami</option>
       <option value="Pia">Pia</option>
-      <option value="FREDDIE">FREDDIE</option>
+      <option value="FREDDIE">Freddie</option>
+      <option value="HAE">Hae</option>
     </select>
     <div id="leaderboardDiv" class="leaderboard"></div>
   </div>
@@ -83,7 +84,7 @@ function escapeHtml(s){return String(s).replace(/</g,'&lt;');}
 
 // Fetch
 async function fetchAll(){
-  const chars=['Nami','Pia','FREDDIE'];
+  const chars=['Nami','Pia','FREDDIE','HAE'];
   const reqs=chars.map(c=>fetch(apiUrl+'?leaderboard='+c).then(r=>r.json()).catch(()=>[]));
   const res=await Promise.all(reqs);
   const flat=res.flatMap((arr,i)=>(arr||[]).map(p=>({id:p.id,name:p.name,hours:Number(p.hours),character:chars[i]})));
