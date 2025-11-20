@@ -6,51 +6,111 @@
 <title>PC Occupancy Tracker</title>
 <style>
 :root {
-  --bg:#0d1117; --card:#0f1720; --muted:#9aa4b2; --accent:#58a6ff; --accent-2:#1f6feb; --glass: rgba(255,255,255,0.03); --text:#e6edf3;
+  --bg:#0d1117;
+  --card:#0f1720;
+  --muted:#9aa4b2;
+  --accent:#58a6ff;
+  --accent-2:#1f6feb;
+  --glass: rgba(255,255,255,0.03);
+  --text:#e6edf3;
 }
 [data-theme="light"] {
-  --bg:#f5f7fa; --card:#ffffff; --muted:#5b6b78; --accent:#1a73e8; --accent-2:#1558b8; --glass: rgba(0,0,0,0.03); --text:#1a1a1a;
+  --bg:#f5f7fa;
+  --card:#ffffff;
+  --muted:#5b6b78;
+  --accent:#1a73e8;
+  --accent-2:#1558b8;
+  --glass: rgba(0,0,0,0.03);
+  --text:#1a1a1a;
 }
 body {
-  margin:0;font-family:Inter,sans-serif;background:var(--bg);color:var(--text);display:flex;justify-content:center;padding:16px;
+  margin:0;
+  font-family:Inter,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  display:flex;
+  justify-content:center;
+  padding:16px;
 }
-.app{width:100%;max-width:960px;display:flex;flex-direction:column;gap:16px;}
-.card{background:var(--card);padding:14px;border-radius:12px;display:flex;flex-direction:column;gap:12px;}
-h1{margin:0 0 10px 0;}
-.pcs-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;}
-.pc-card{background:var(--card);border:1px solid var(--glass);padding:12px;border-radius:8px;}
-.pc-title{font-size:18px;font-weight:600;margin-bottom:6px;}
-.pc-status{font-size:14px;margin-bottom:6px;}
-.btn{padding:6px 10px;border:none;background:var(--accent);color:#fff;border-radius:4px;cursor:pointer;font-size:14px;margin-right:6px;}
-.btn:hover{background:var(--accent-2);}
+.app {
+  width:100%;
+  max-width:960px;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+.card {
+  background:var(--card);
+  padding:14px;
+  border-radius:12px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.pcs-grid {
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px,1fr));
+  gap:12px;
+}
+.pc-card {
+  background:var(--card);
+  border:1px solid var(--glass);
+  padding:12px;
+  border-radius:8px;
+}
+.pc-title { font-size:18px; font-weight:600; margin-bottom:6px; }
+.pc-status { font-size:14px; margin-bottom:6px; }
+.btn {
+  padding:6px 10px;
+  border:none;
+  background: var(--accent);
+  color:#fff;
+  border-radius:4px;
+  cursor:pointer;
+  margin-right:6px;
+}
+.btn:hover { background: var(--accent-2); }
+.report-table {
+  width:100%;
+  border-collapse: collapse;
+  margin-top:12px;
+}
+.report-table th, .report-table td {
+  border:1px solid var(--glass);
+  padding:8px;
+  text-align:center;
+}
 </style>
 </head>
 <body>
 <div class="app">
   <div class="card">
-    <h1>PC Occupancy Tracker</h1>
+    <h2>PC Occupancy Tracker</h2>
     <div id="pcs" class="pcs-grid">Loading...</div>
+    <button id="generateReport" class="btn" style="margin-top:10px;">Generate Report</button>
+    <div id="reportContainer"></div>
   </div>
 </div>
 
 <script>
-const BACKEND_URL = "https://boundless-backend-vo5t.onrender.com"; // replace with your Render backend
-const WS_URL = "wss://boundless-backend-vo5t.onrender.com"; // WebSocket
+// ============================
+// Config
+// ============================
+const HTTP_BASE = "https://boundless-backend-vo5t.onrender.com"; // Your Render backend
+const WS_URL = "wss://boundless-backend-vo5t.onrender.com";
 
-const pcsContainer = document.getElementById('pcs');
-
-// Initialize 25 PCs if backend returns empty
-const initialPCs = {};
-for(let i=1;i<=25;i++) initialPCs['PC '+i] = {status:'free', updatedBy:null, updatedAt:null};
-
+// ============================
 // Render PCs
-function renderPCs(pcs){
+// ============================
+const pcsContainer = document.getElementById("pcs");
+
+function renderPCs(pcs) {
   pcsContainer.innerHTML = '';
-  Object.keys(pcs).forEach(pc=>{
-    const {status, updatedBy, updatedAt} = pcs[pc];
-    const card = document.createElement('div');
-    card.className='pc-card';
-    card.innerHTML=`
+  Object.keys(pcs).forEach(pc => {
+    const { status, updatedBy, updatedAt } = pcs[pc];
+    const card = document.createElement("div");
+    card.className = "pc-card";
+    card.innerHTML = `
       <div class="pc-title">${pc}</div>
       <div class="pc-status"><b>Status:</b> ${status}</div>
       <div><b>By:</b> ${updatedBy || "—"}</div>
@@ -64,26 +124,52 @@ function renderPCs(pcs){
   });
 }
 
-// Fetch initial state
-async function loadInitial(){
-  try{
-    const res = await fetch(`${BACKEND_URL}/pcs`);
+// ============================
+// WebSocket
+// ============================
+const ws = new WebSocket(WS_URL);
+ws.onopen = () => console.log("WS connected");
+ws.onmessage = ev => {
+  try {
+    const msg = JSON.parse(ev.data);
+    if(msg.type==='state') renderPCs(msg.data);
+  } catch(e) { console.error(e); }
+};
+
+// ============================
+// Fetch initial PC state
+// ============================
+async function loadInitial() {
+  try {
+    const res = await fetch(`${HTTP_BASE}/pcs`);
     const data = await res.json();
-    renderPCs(Object.keys(data).length ? data : initialPCs);
-  } catch(e){
+    renderPCs(data);
+  } catch(e) {
+    pcsContainer.innerHTML="<p style='color:red'>Failed to load PC data.</p>";
     console.error(e);
-    renderPCs(initialPCs);
   }
 }
 
+// ============================
 // Update PC status
-async function updatePC(pc,status){
-  const name = prompt("Your name (optional)","");
-  try{
-    await fetch(`${BACKEND_URL}/update`,{
+// ============================
+async function updatePC(pc, status) {
+  let updatedBy = null;
+
+  if(status === "occupied") {
+    updatedBy = prompt("Your name (required to occupy):","");
+    if(!updatedBy) return alert("Name is required to occupy the PC.");
+  }
+
+  try {
+    await fetch(`${HTTP_BASE}/update`, {
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({pc,status,updatedBy:name||null})
+      body: JSON.stringify({
+        pc,
+        status,
+        updatedBy: status === "free" ? null : updatedBy
+      })
     });
   } catch(e){
     console.error(e);
@@ -91,19 +177,28 @@ async function updatePC(pc,status){
   }
 }
 
-// WebSocket for real-time updates
-const ws = new WebSocket(WS_URL);
-ws.onopen = ()=>console.log("WebSocket connected");
-ws.onmessage = ev=>{
-  try{
-    const msg = JSON.parse(ev.data);
-    if(msg.type==='state') renderPCs(msg.data);
-  }catch(e){console.error(e);}
-};
-ws.onerror = e=>console.error("WebSocket error:", e);
-ws.onclose = ()=>console.warn("WebSocket closed");
+// ============================
+// Generate report
+// ============================
+document.getElementById("generateReport").addEventListener("click", async () => {
+  try {
+    const res = await fetch(`${HTTP_BASE}/report`);
+    const data = await res.json();
+    let html = `<table class="report-table"><tr><th>PC</th><th>Total Uptime</th><th>Total Downtime</th></tr>`;
+    Object.keys(data).forEach(pc => {
+      html += `<tr><td>${pc}</td><td>${data[pc].totalUptime}</td><td>${data[pc].totalDowntime}</td></tr>`;
+    });
+    html += "</table>";
+    document.getElementById("reportContainer").innerHTML = html;
+  } catch(e) {
+    console.error(e);
+    alert("Failed to generate report");
+  }
+});
 
-// Load initial data
+// ============================
+// Initial load
+// ============================
 loadInitial();
 </script>
 </body>
