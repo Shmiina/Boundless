@@ -3,40 +3,35 @@ const express = require("express");
 const cors = require("cors");
 const http = require("http");
 const WebSocket = require("ws");
+const { Low } = require('lowdb');
+const { JSONFile } = require('lowdb/node');
 const path = require('path');
+
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const { Low } = require('lowdb')
-const { JSONFile } = require('lowdb/node')
-// Path to db.json
-const file = path.join(__dirname, 'db.json')
-const adapter = new JSONFile(file)
+// Database setup with default data for lowdb v6+
+const file = path.join(__dirname, 'db.json');
+const adapter = new JSONFile(file);
+const db = new Low(adapter);
 
-// Provide default data here
-const defaultData = {
-  pcs: {
+async function initDb() {
+  await db.read();
+  db.data ||= { pcs: {
     PC1: { status: 'free', updatedBy: null, updatedAt: null },
     PC2: { status: 'free', updatedBy: null, updatedAt: null },
     PC3: { status: 'free', updatedBy: null, updatedAt: null }
-  }
+  }};
+  await db.write();
 }
-
-const db = new Low(adapter, defaultData)  // <- pass default data here
-
-// Initialize
-async function initDb() {
-  await db.read()      // loads existing data or defaultData
-  await db.write()     // ensures file is created with defaults if missing
-}
-
-initDb()
+initDb();
 
 // HTTP server + WebSocket server
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
+// Broadcast PC state to all WS clients
 function broadcastState() {
   const payload = JSON.stringify({ type: "state", data: db.data.pcs });
   wss.clients.forEach(client => {
@@ -78,5 +73,6 @@ app.post("/update", async (req, res) => {
 // Serve frontend static files from repo root
 app.use('/', express.static(path.join(__dirname, '..')));
 
+// Use Render's PORT environment variable
 const PORT = process.env.PORT || 8080;
-server.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
