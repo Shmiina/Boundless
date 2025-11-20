@@ -1,7 +1,19 @@
 {
   "pcs": {
-    "PC1": { "status": "free", "updatedBy": null, "updatedAt": null },
-    "PC2": { "status": "free", "updatedBy": null, "updatedAt": null },
-    "PC3": { "status": "free", "updatedBy": null, "updatedAt": null }
+    "PC1": {
+      "status": "free",
+      "updatedBy": null,
+      "updatedAt": null
+    },
+    "PC2": {
+      "status": "free",
+      "updatedBy": null,
+      "updatedAt": null
+    },
+    "PC3": {
+      "status": "free",
+      "updatedBy": null,
+      "updatedAt": null
+    }
   }
 }

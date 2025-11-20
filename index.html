@@ -29,6 +29,35 @@ body {margin:0;font-family:Inter,sans-serif;background:var(--bg);color:var(--tex
 .button{padding:8px 14px;border-radius:10px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-weight:600;}
 .button:hover{background:var(--accent-2);}
 @media(max-width:800px){.app{flex-direction:column;} .topbar{flex-direction:column;} .card{flex-direction:column;}}
+
+.pcs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.pc-card {
+  border: 1px solid #ddd;
+  padding: 12px;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.pc-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+.pc-status { margin-bottom: 8px; font-size: 14px; }
+
+.btn {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  background: #f9f9f9;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn:hover { background: #ececec; }
+.row { margin-top: 6px; }
+
 </style>
 </head>
 <body>
@@ -127,6 +156,105 @@ function search(q){
 fetchAll().then(()=>renderLeaderboard('Nami'));
 document.getElementById('charSelect').addEventListener('change', e=>renderLeaderboard(e.target.value));
 document.getElementById('mainSearch').addEventListener('input', e=>search(e.target.value));
+
+</script>
+
+<br><hr><br>
+
+<h1>PC Occupancy Tracker</h1>
+<div class="tracker">
+  <div id="pcs" class="pcs-grid">Loading...</div>
+</div>
+
+<script>
+  // ============================
+  // Config
+  // ============================
+  const BACKEND_PORT = 8080;          // Port where your Node server runs
+  const BACKEND_HOST = location.hostname || "localhost";  // fallback for file://
+  const HTTP_BASE = `http://${BACKEND_HOST}:${BACKEND_PORT}`;  // for fetch requests
+  const WS_URL = `ws://${BACKEND_HOST}:${BACKEND_PORT}`;        // for websocket
+
+  // ============================
+  // WebSocket
+  // ============================
+  const ws = new WebSocket(WS_URL);
+
+  ws.onopen = () => console.log(`WebSocket connected to ${WS_URL}`);
+  ws.onerror = (err) => console.error("WebSocket error:", err);
+  ws.onclose = () => console.warn("WebSocket closed");
+
+  ws.onmessage = (ev) => {
+    try {
+      const msg = JSON.parse(ev.data);
+      if (msg.type === "state") renderPCs(msg.data);
+    } catch(e) {
+      console.error("Failed to parse WebSocket message:", e);
+    }
+  };
+
+  // ============================
+  // Fetch initial PC state
+  // ============================
+  async function loadInitial() {
+    try {
+      const res = await fetch(`${HTTP_BASE}/pcs`);
+      const pcs = await res.json();
+      renderPCs(pcs);
+    } catch(e) {
+      console.error("Failed to fetch /pcs:", e);
+      document.getElementById("pcs").innerHTML = "<p style='color:red'>Failed to load PC data.</p>";
+    }
+  }
+
+  // ============================
+  // Render function
+  // ============================
+  function renderPCs(pcs) {
+    const container = document.getElementById("pcs");
+    container.innerHTML = "";
+
+    Object.keys(pcs).forEach(pc => {
+      const { status, updatedBy, updatedAt } = pcs[pc];
+      const card = document.createElement("div");
+      card.className = "pc-card";
+
+      card.innerHTML = `
+        <div class="pc-title">${pc}</div>
+        <div class="pc-status"><b>Status:</b> ${status}</div>
+        <div><b>By:</b> ${updatedBy || "—"}</div>
+        <div><b>At:</b> ${updatedAt ? new Date(updatedAt).toLocaleString() : "—"}</div>
+        <div class="row">
+          <button class="btn" onclick="updatePC('${pc}','occupied')">Occupied</button>
+          <button class="btn" onclick="updatePC('${pc}','free')">Free</button>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  // ============================
+  // Update PC status
+  // ============================
+  async function updatePC(pc, status) {
+    const name = prompt("Your name (optional):", "");
+    try {
+      await fetch(`${HTTP_BASE}/update`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pc, status, updatedBy: name || null })
+      });
+      // UI will auto-update via WebSocket broadcast
+    } catch(e) {
+      console.error("Failed to update PC:", e);
+      alert("Failed to update PC. Check console for details.");
+    }
+  }
+
+  // ============================
+  // Initial load
+  // ============================
+  loadInitial();
 </script>
 </body>
 </html>
