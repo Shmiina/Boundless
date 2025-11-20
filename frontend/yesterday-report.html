@@ -12,6 +12,8 @@
   --text:#e6edf3;
   --muted:#8b949e;
   --glass:rgba(255,255,255,0.05);
+  --blue:#1f6feb;
+  --blue-hover:#388bfd;
 }
 body {
   margin:0;
@@ -32,7 +34,7 @@ body {
   margin-bottom:12px;
 }
 .backbtn {
-  background:#1f6feb;
+  background:var(--blue);
   color:white;
   padding:10px 14px;
   border-radius:8px;
@@ -40,9 +42,8 @@ body {
   cursor:pointer;
   margin-bottom:20px;
 }
-.backbtn:hover {
-  background:#388bfd;
-}
+.backbtn:hover { background:var(--blue-hover); }
+h2 { margin-top:0; }
 </style>
 </head>
 
@@ -51,7 +52,7 @@ body {
 
 <button class="backbtn" onclick="window.location.href='pc-tracker.html'">⬅ Back</button>
 
-<h2>📄 Yesterday Report</h2>
+<h2>📄 Yesterday Report — <span id="dateHeader"></span></h2>
 <div id="report">Loading...</div>
 
 </div>
@@ -60,6 +61,12 @@ body {
 const BACKEND = "https://boundless-backend-vo5t.onrender.com";
 
 async function loadYesterday() {
+  // Calculate yesterday date
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yDate = yesterday.toISOString().slice(0, 10);
+  document.getElementById("dateHeader").innerText = yDate;
+
   try {
     const res = await fetch(`${BACKEND}/yesterday`);
     const data = await res.json();
@@ -80,9 +87,14 @@ async function loadYesterday() {
       container.appendChild(div);
     });
 
+    if(data.length === 0) {
+      container.innerHTML = "<p style='color:#888'>No data available for yesterday.</p>";
+    }
+
   } catch (err) {
     document.getElementById("report").innerHTML =
       "<p style='color:red'>Failed to load report.</p>";
+    console.error(err);
   }
 }
 
