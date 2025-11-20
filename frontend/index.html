@@ -73,9 +73,9 @@ body {margin:0;font-family:Inter,sans-serif;background:var(--bg);color:var(--tex
 
 
 <!-- PC Occupancy Tracker -->
-<div class="card">
-<h3>PC Occupancy Tracker</h3>
-<div id="pcs" class="pcs-grid">Loading...</div>
+<h1>PC Occupancy Tracker</h1>
+<div class="tracker">
+  <div id="pcs" class="pcs-grid">Loading...</div>
 </div>
 
 
@@ -125,73 +125,96 @@ document.getElementById('mainSearch').addEventListener('input', e=>{
 });
 fetchAll().then(()=>renderLeaderboard('Nami'));
 
-// -------------------- PC Tracker --------------------
-const BACKEND_HOST = "your-backend.up.railway.app";
-const BACKEND_PORT = 80; // or omit for https/ws
-const HTTP_BASE = `https://${BACKEND_HOST}`;
-const WS_URL = `wss://${BACKEND_HOST}`;
-
-const pcsContainer = document.getElementById('pcs');
-
-// Fetch initial state
-async function loadInitial(){
-  try{
-    const res=await fetch(`${HTTP_BASE}/pcs`);
-    const pcs=await res.json();
-    renderPCs(pcs);
-  }catch(e){
-    console.error('Failed to fetch /pcs:', e);
-    pcsContainer.innerHTML='<p style="color:red">Failed to load PC data.</p>';
-  }
-}
-
-function renderPCs(pcs){
-  pcsContainer.innerHTML='';
-  Object.keys(pcs).forEach(pc=>{
-    const { status, updatedBy, updatedAt } = pcs[pc];
-    const card=document.createElement('div');
-    card.className='pc-card';
-    card.innerHTML=`
-      <div class="pc-title">${pc}</div>
-      <div class="pc-status"><b>Status:</b> ${status}</div>
-      <div><b>By:</b> ${updatedBy||'—'}</div>
-      <div><b>At:</b> ${updatedAt?new Date(updatedAt).toLocaleString():'—'}</div>
-      <div class="row">
-        <button class="btn" onclick="updatePC('${pc}','occupied')">Occupied</button>
-        <button class="btn" onclick="updatePC('${pc}','free')">Free</button>
-      </div>
-    `;
-    pcsContainer.appendChild(card);
-  });
-}
-
-async function updatePC(pc,status){
-  const name=prompt('Your name (optional):','');
-  try{
-    await fetch(`${HTTP_BASE}/update`,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({pc,status,updatedBy:name||null})
-    });
-  }catch(e){
-    console.error('Failed to update PC:',e);
-    alert('Failed to update PC.');
-  }
-}
-
-// WebSocket for real-time updates
-const ws=new WebSocket(WS_URL);
-ws.onopen=()=>console.log(`WebSocket connected to ${WS_URL}`);
-ws.onerror=()=>{console.warn('WebSocket failed, falling back to fetch every 5s'); setInterval(loadInitial,5000);};
-ws.onmessage=ev=>{
-  try{
-    const msg=JSON.parse(ev.data);
-    if(msg.type==='state') renderPCs(msg.data);
-  }catch(e){console.error('Failed to parse WS message:',e);}
-};
-
-// Initial load
-loadInitial();
 </script>
+<script>
+  // ============================
+  // CONFIG
+  // ============================
+  const BACKEND_HOST = "YOUR_RAILWAY_URL"; // e.g., myproject.up.railway.app
+  const HTTP_BASE = `https://${BACKEND_HOST}`;
+  const WS_URL = `wss://${BACKEND_HOST}`;
+
+  // ============================
+  // WEBSOCKET
+  // ============================
+  const ws = new WebSocket(WS_URL);
+
+  ws.onopen = () => console.log(`WebSocket connected to ${WS_URL}`);
+  ws.onerror = (err) => console.error("WebSocket error:", err);
+  ws.onclose = () => console.warn("WebSocket closed");
+
+  ws.onmessage = (ev) => {
+    try {
+      const msg = JSON.parse(ev.data);
+      if (msg.type === "state") renderPCs(msg.data);
+    } catch(e) {
+      console.error("Failed to parse WebSocket message:", e);
+    }
+  };
+
+  // ============================
+  // FETCH INITIAL PC STATE
+  // ============================
+  async function loadInitial() {
+    try {
+      const res = await fetch(`${HTTP_BASE}/pcs`);
+      const pcs = await res.json();
+      renderPCs(pcs);
+    } catch(e) {
+      console.error("Failed to fetch /pcs:", e);
+      document.getElementById("pcs").innerHTML = "<p style='color:red'>Failed to load PC data.</p>";
+    }
+  }
+
+  // ============================
+  // RENDER FUNCTION
+  // ============================
+  function renderPCs(pcs) {
+    const container = document.getElementById("pcs");
+    container.innerHTML = "";
+
+    Object.keys(pcs).forEach(pc => {
+      const { status, updatedBy, updatedAt } = pcs[pc];
+      const card = document.createElement("div");
+      card.className = "pc-card";
+
+      card.innerHTML = `
+        <div class="pc-title">${pc}</div>
+        <div class="pc-status"><b>Status:</b> ${status}</div>
+        <div><b>By:</b> ${updatedBy || "—"}</div>
+        <div><b>At:</b> ${updatedAt ? new Date(updatedAt).toLocaleString() : "—"}</div>
+        <div class="row">
+          <button class="btn" onclick="updatePC('${pc}','occupied')">Occupied</button>
+          <button class="btn" onclick="updatePC('${pc}','free')">Free</button>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  // ============================
+  // UPDATE PC STATUS
+  // ============================
+  async function updatePC(pc, status) {
+    const name = prompt("Your name (optional):", "");
+    try {
+      await fetch(`${HTTP_BASE}/update`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pc, status, updatedBy: name || null })
+      });
+      // UI auto-updates via WebSocket
+    } catch(e) {
+      console.error("Failed to update PC:", e);
+      alert("Failed to update PC. Check console for details.");
+    }
+  }
+
+  // ============================
+  // INITIAL LOAD
+  // ============================
+  loadInitial();
+</script>
+
 </body>
 </html>
