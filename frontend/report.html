@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reports</title>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+:root {
+  --bg:#0d1117;
+  --card:#161b22;
+  --text:#e6edf3;
+  --muted:#8b949e;
+  --glass:rgba(255,255,255,0.05);
+  --blue:#1f6feb;
+  --blue-hover:#388bfd;
+}
+body { margin:0; padding:20px; font-family:Inter,sans-serif; background:var(--bg); color:var(--text);}
+.container { max-width:900px; margin:auto; }
+.backbtn { background:var(--blue); color:white; padding:10px 14px; border-radius:8px; border:none; cursor:pointer; margin-bottom:20px;}
+.backbtn:hover { background:var(--blue-hover);}
+h2 { margin-top:0; margin-bottom:16px;}
+.tabs { display:flex; gap:10px; margin-bottom:20px; }
+.tab { padding:10px 14px; background:var(--card); border-radius:8px; cursor:pointer; user-select:none; }
+.tab.active { background:var(--blue); color:white; }
+.card, .chart-card { background:var(--card); padding:16px; border-radius:10px; border:1px solid var(--glass); margin-bottom:12px; }
+#pcFilter { margin-bottom:16px; padding:6px 10px; border-radius:6px; border:none; background:var(--card); color:var(--text); }
+</style>
+</head>
+<body>
+
+<div class="container">
+<button class="backbtn" onclick="window.location.href='pc-tracker.html'">⬅ Back</button>
+
+<h2>📄 Reports</h2>
+
+<div class="tabs">
+  <div class="tab active" data-tab="yesterday" onclick="switchTab('yesterday')">Yesterday</div>
+  <div class="tab" data-tab="weekly" onclick="switchTab('weekly')">Weekly Summary</div>
+</div>
+
+<!-- PC Filter -->
+<select id="pcFilter" onchange="updateWeeklyCharts()">
+  <option value="all">All PCs</option>
+</select>
+
+<!-- Yesterday Report -->
+<div id="yesterdayTab">
+  <h3>Yesterday — <span id="dateHeader"></span></h3>
+  <div id="yesterdayReport">Loading...</div>
+</div>
+
+<!-- Weekly Summary -->
+<div id="weeklyTab" style="display:none;">
+  <div id="weeklyCharts"></div>
+</div>
+
+</div>
+
+<script>
+const BACKEND = "https://boundless-backend-vo5t.onrender.com";
+
+// --- Tabs ---
+function switchTab(tabName){
+  document.getElementById('yesterdayTab').style.display = tabName==='yesterday'?'block':'none';
+  document.getElementById('weeklyTab').style.display = tabName==='weekly'?'block':'none';
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelector(`.tab[data-tab=${tabName}]`).classList.add('active');
+}
+
+// --- Yesterday Report ---
+async function loadYesterday(){
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate()-1);
+  const yDate = yesterday.toISOString().slice(0,10);
+  document.getElementById("dateHeader").innerText = yDate;
+
+  try {
+    const res = await fetch(`${BACKEND}/yesterday`);
+    const data = await res.json();
+    const container = document.getElementById("yesterdayReport");
+    container.innerHTML = "";
+    if(data.length===0){ container.innerHTML="<p style='color:#888'>No data available for yesterday.</p>"; return; }
+
+    data.forEach(pc=>{
+      const div = document.createElement("div");
+      div.className="card";
+      div.innerHTML = `<h4>${pc.name}</h4><div>Uptime: <b>${pc.total_uptime.toFixed(2)}</b> hrs</div><div>Downtime: <b>${pc.total_downtime.toFixed(2)}</b> hrs</div>`;
+      container.appendChild(div);
+    });
+  } catch(err){
+    console.error(err);
+    document.getElementById("yesterdayReport").innerHTML="<p style='color:red'>Failed to load report.</p>";
+  }
+}
+
+// --- Weekly Summary ---
+let weeklyData = {};
+let chartObjects = [];
+
+function getLast7Days(){
+  const days=[];
+  for(let i=6;i>=0;i--){
+    const d = new Date();
+    d.setDate(d.getDate()-i);
+    days.push(d.toISOString().slice(0,10));
+  }
+  return days;
+}
+
+async function loadWeeklySummary(){
+  const days = getLast7Days();
+  const chartsDiv = document.getElementById("weeklyCharts");
+  chartsDiv.innerHTML="";
+  weeklyData = {};
+
+  const res = await fetch(`${BACKEND}/pcs_history_week?days=${days.join(",")}`);
+  const data = await res.json();
+  weeklyData = data;
+
+  const filterSelect = document.getElementById("pcFilter");
+  filterSelect.innerHTML = `<option value="all">All PCs</option>`;
+  Object.keys(data).forEach(pc=> filterSelect.innerHTML+=`<option value="${pc}">${pc}</option>`);
+
+  updateWeeklyCharts();
+}
+
+function updateWeeklyCharts(){
+  // Clear existing charts
+  chartObjects.forEach(c=>c.destroy());
+  chartObjects=[];
+  const chartsDiv = document.getElementById("weeklyCharts");
+  chartsDiv.innerHTML="";
+
+  const selectedPC = document.getElementById("pcFilter").value;
+  const pcsToShow = selectedPC==="all"?Object.keys(weeklyData):[selectedPC];
+
+  pcsToShow.forEach(pcName=>{
+    const canvas = document.createElement("canvas");
+    const card = document.createElement("div");
+    card.className="chart-card";
+    card.appendChild(canvas);
+    chartsDiv.appendChild(card);
+
+    const labels = weeklyData[pcName].map(d=>d.date);
+    const uptimeData = weeklyData[pcName].map(d=>d.uptime);
+    const downtimeData = weeklyData[pcName].map(d=>d.downtime);
+
+    const chart = new Chart(canvas,{
+      type:"bar",
+      data:{
+        labels,
+        datasets:[
+          { label:"Uptime (hrs)", data:uptimeData, backgroundColor:"#1f6feb" },
+          { label:"Downtime (hrs)", data:downtimeData, backgroundColor:"#388bfd" }
+        ]
+      },
+      options:{ responsive:true, plugins:{legend:{position:"top"}}, scales:{y:{beginAtZero:true}} }
+    });
+    chartObjects.push(chart);
+  });
+}
+
+// --- Load all ---
+loadYesterday();
+loadWeeklySummary();
+
+</script>
+
+</body>
+</html>
