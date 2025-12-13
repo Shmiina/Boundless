@@ -1,153 +1,540 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Player Hours — Leaderboard</title>
-<style>
-:root{
-  --bg:#0d1117; --card:#0f1720; --muted:#9aa4b2; --accent:#58a6ff; --accent-2:#1f6feb; --glass: rgba(255,255,255,0.03); --text:#e6edf3;
-}
-[data-theme="light"] {
-  --bg: #f5f7fa;
-  --card: #ffffff;
-  --muted: #5b6b78;
-  --accent: #1a73e8;
-  --accent-2: #1558b8;
-  --glass: rgba(0,0,0,0.03);
-  --text: #1a1a1a;
-}
-body {
-  margin:0;font-family:Inter,sans-serif;background:var(--bg);color:var(--text);display:flex;justify-content:center;padding:16px;
-}
-.app{width:100%;max-width:960px;display:flex;flex-direction:column;gap:16px;}
-.topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
-.search input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--glass);font-size:14px;background:var(--card);color:inherit;}
-.theme-select{padding:10px;border-radius:10px;background:var(--card);color:inherit;border:1px solid var(--glass);}
-.card{background:var(--card);padding:14px;border-radius:12px;display:flex;flex-direction:column;gap:12px;}
-.leaderboard{display:flex;flex-direction:column;gap:8px;}
-.player{display:flex;align-items:center;padding:10px;border-radius:10px;background:var(--glass);}
-.button{padding:8px 14px;border-radius:10px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-weight:600;}
-.button:hover{background:var(--accent-2);}
-@media(max-width:800px){.app{flex-direction:column;} .topbar{flex-direction:column;} .card{flex-direction:column;}}
-
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Player Hours — Leaderboard | Boundless AI</title>
+  <meta name="description" content="View the top players leaderboard for Boundless AI. Track player hours across Nami, Pia, Freddie, and Hae characters.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --card: #12121a;
+      --card-hover: #1a1a24;
+      --muted: #8b8fa3;
+      --accent: #6366f1;
+      --accent-2: #4f46e5;
+      --accent-glow: rgba(99, 102, 241, 0.3);
+      --glass: rgba(255, 255, 255, 0.05);
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #f1f5f9;
+      --gold: #fbbf24;
+      --silver: #94a3b8;
+      --bronze: #cd7f32;
+    }
+    
+    [data-theme="light"] {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --card-hover: #f1f5f9;
+      --muted: #64748b;
+      --accent: #4f46e5;
+      --accent-2: #4338ca;
+      --accent-glow: rgba(79, 70, 229, 0.2);
+      --glass: rgba(0, 0, 0, 0.03);
+      --border: rgba(0, 0, 0, 0.08);
+      --text: #0f172a;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px;
+    }
+    
+    .app {
+      width: 100%;
+      max-width: 1000px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text);
+    }
+    
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 18px;
+    }
+    
+    .logo-text {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    
+    .nav-links {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    
+    .nav-link {
+      padding: 10px 16px;
+      border-radius: 10px;
+      background: var(--card);
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      transition: all 0.2s ease;
+    }
+    
+    .nav-link:hover, .nav-link.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+    
+    /* Topbar */
+    .topbar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    
+    .search {
+      flex: 1;
+      min-width: 200px;
+    }
+    
+    .search input {
+      width: 100%;
+      padding: 14px 18px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      font-size: 15px;
+      background: var(--card);
+      color: var(--text);
+      transition: all 0.2s ease;
+    }
+    
+    .search input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    
+    .search input::placeholder {
+      color: var(--muted);
+    }
+    
+    .theme-select, .char-select {
+      padding: 14px 18px;
+      border-radius: 12px;
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border);
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .theme-select:hover, .char-select:hover {
+      border-color: var(--accent);
+    }
+    
+    /* Main Card */
+    .card {
+      background: var(--card);
+      padding: 24px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    
+    .card-title {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    
+    .button {
+      padding: 10px 18px;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: white;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+    
+    .button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px var(--accent-glow);
+    }
+    
+    .button-secondary {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      box-shadow: none;
+    }
+    
+    .button-secondary:hover {
+      background: var(--card-hover);
+      border-color: var(--accent);
+    }
+    
+    /* Leaderboard */
+    .leaderboard {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .player {
+      display: flex;
+      align-items: center;
+      padding: 16px;
+      border-radius: 12px;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      transition: all 0.2s ease;
+    }
+    
+    .player:hover {
+      background: var(--card-hover);
+      border-color: var(--accent);
+      transform: translateX(4px);
+    }
+    
+    .rank {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 16px;
+      border-radius: 10px;
+      margin-right: 16px;
+      background: var(--glass);
+      color: var(--muted);
+    }
+    
+    .rank.gold {
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      color: #1a1a1a;
+    }
+    
+    .rank.silver {
+      background: linear-gradient(135deg, #cbd5e1, #94a3b8);
+      color: #1a1a1a;
+    }
+    
+    .rank.bronze {
+      background: linear-gradient(135deg, #cd7f32, #b8860b);
+      color: white;
+    }
+    
+    .player-info {
+      flex: 1;
+    }
+    
+    .player-name {
+      font-weight: 600;
+      font-size: 16px;
+      margin-bottom: 4px;
+    }
+    
+    .player-id {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    
+    .player-hours {
+      font-weight: 700;
+      font-size: 18px;
+      color: var(--accent);
+    }
+    
+    .player-hours span {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+    
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--muted);
+    }
+    
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--glass);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Responsive */
+    @media (max-width: 640px) {
+      body { padding: 16px; }
+      .card { padding: 16px; }
+      .card-header { flex-direction: column; align-items: stretch; }
+      .button-group { justify-content: center; }
+      .header { flex-direction: column; align-items: stretch; }
+      .nav-links { justify-content: center; }
+    }
+  </style>
 </head>
 <body>
-<div class="app">
+  <div class="app">
+    
+    <!-- Header -->
+    <header class="header">
+      <a href="../index.html" class="logo">
+        <div class="logo-icon">B</div>
+        <span class="logo-text">Boundless AI</span>
+      </a>
+      <nav class="nav-links">
+        <a href="../index.html" class="nav-link">Home</a>
+        <a href="leaderboard.html" class="nav-link active">Leaderboard</a>
+        <a href="pc-tracker.html" class="nav-link">PC Tracker</a>
+        <a href="20plus.html" class="nav-link">20+ Hours</a>
+        <a href="https://github.com/Shmiina/" target="_blank" class="nav-link">GitHub</a>
+      </nav>
+    </header>
 
-  <!-- Topbar -->
-  <div class="topbar">
-    <div class="search">
-      <input id="mainSearch" placeholder="Search players...">
-    </div>
-    <select id="themeSelect" class="theme-select">
-      <option value="auto">Auto</option>
-      <option value="dark">Dark</option>
-      <option value="light">Light</option>
-    </select>
-  </div>
-
-  <!-- Leaderboard Card -->
-  <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
-      <h3>Leaderboard</h3>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <a href="20plus.html"><button class="button">Top Players 20+</button></a>
-        <a href="pc-tracker.html"><button class="button">PC Tracker</button></a>
-        <a href="report.html"><button class="button">Report</button></a>
+    <!-- Search & Theme -->
+    <div class="topbar">
+      <div class="search">
+        <input id="mainSearch" placeholder="Search players by name or ID...">
       </div>
+      <select id="themeSelect" class="theme-select">
+        <option value="auto">🌗 Auto</option>
+        <option value="dark">🌙 Dark</option>
+        <option value="light">☀️ Light</option>
+      </select>
     </div>
 
-    <select id="charSelect" class="theme-select">
-      <option value="Nami">Nami</option>
-      <option value="Pia">Pia</option>
-      <option value="FREDDIE">Freddie</option>
-      <option value="HAE">Hae</option>
-    </select>
-    <div id="leaderboardDiv" class="leaderboard"></div>
+    <!-- Leaderboard Card -->
+    <main class="card">
+      <div class="card-header">
+        <h1 class="card-title">🏆 Leaderboard</h1>
+        <div class="button-group">
+          <a href="20plus.html" class="button button-secondary">Top 20+ Hours</a>
+          <a href="pc-tracker.html" class="button button-secondary">PC Tracker</a>
+          <a href="report.html" class="button">📊 Report</a>
+        </div>
+      </div>
+
+      <select id="charSelect" class="char-select">
+        <option value="Nami">🌊 Nami</option>
+        <option value="Pia">🎀 Pia</option>
+        <option value="FREDDIE">🎸 Freddie</option>
+        <option value="HAE">✨ Hae</option>
+      </select>
+
+      <div id="leaderboardDiv" class="leaderboard">
+        <div class="loading">
+          <div class="loading-spinner"></div>
+          <p>Loading leaderboard...</p>
+        </div>
+      </div>
+    </main>
   </div>
-</div>
 
 <script>
-const apiUrl = "https://script.google.com/macros/s/AKfycbwOtTP8TgoM6URjfUNLqK0962-wRAP4IDHlKQApNvpov6dH7A7fxmrKSZ45hg_mKGBIaA/exec"; // Update with your GAS URL
+const apiUrl = "https://script.google.com/macros/s/AKfycbwOtTP8TgoM6URjfUNLqK0962-wRAP4IDHlKQApNvpov6dH7A7fxmrKSZ45hg_mKGBIaA/exec";
 let mergedData = [], allData = [], themeMode = localStorage.getItem('ph_theme') || 'auto';
 
 // ============================
 // Theme
 // ============================
-function applyTheme(mode){
-  document.documentElement.setAttribute('data-theme',
-    mode==='auto'? (window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark') : mode
-  );
+function applyTheme(mode) {
+  const resolved = mode === 'auto' 
+    ? (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') 
+    : mode;
+  document.documentElement.setAttribute('data-theme', resolved);
 }
+
 applyTheme(themeMode);
 document.getElementById('themeSelect').value = themeMode;
-document.getElementById('themeSelect').addEventListener('change', e=>{
-  themeMode=e.target.value;
-  localStorage.setItem('ph_theme',themeMode);
+document.getElementById('themeSelect').addEventListener('change', e => {
+  themeMode = e.target.value;
+  localStorage.setItem('ph_theme', themeMode);
   applyTheme(themeMode);
 });
 
 // ============================
 // Helpers
 // ============================
-function numberFmt(n){return (Number(n)||0).toFixed(2);}
-function escapeHtml(s){return String(s).replace(/</g,'&lt;');}
+function numberFmt(n) { return (Number(n) || 0).toFixed(2); }
+function escapeHtml(s) { return String(s).replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+function getRankClass(index) {
+  if (index === 0) return 'gold';
+  if (index === 1) return 'silver';
+  if (index === 2) return 'bronze';
+  return '';
+}
 
 // ============================
 // Fetch data
 // ============================
-async function fetchAll(){
-  const chars=['Nami','Pia','FREDDIE','HAE'];
-  const reqs = chars.map(c => fetch(apiUrl+'?leaderboard='+c).then(r=>r.json()).catch(()=>[]));
+async function fetchAll() {
+  const chars = ['Nami', 'Pia', 'FREDDIE', 'HAE'];
+  const reqs = chars.map(c => 
+    fetch(apiUrl + '?leaderboard=' + c)
+      .then(r => r.json())
+      .catch(() => [])
+  );
   const res = await Promise.all(reqs);
-  const flat = res.flatMap((arr,i)=>(arr||[]).map(p=>({id:p.id,name:p.name,hours:Number(p.hours),character:chars[i]})));
-  allData=flat;
-  const map=new Map();
-  flat.forEach(p=>{if(!map.has(p.id)||p.hours>map.get(p.id).hours) map.set(p.id,p);});
-  mergedData=[...map.values()];
+  const flat = res.flatMap((arr, i) => 
+    (arr || []).map(p => ({
+      id: p.id,
+      name: p.name,
+      hours: Number(p.hours),
+      character: chars[i]
+    }))
+  );
+  allData = flat;
+  const map = new Map();
+  flat.forEach(p => {
+    if (!map.has(p.id) || p.hours > map.get(p.id).hours) {
+      map.set(p.id, p);
+    }
+  });
+  mergedData = [...map.values()];
 }
 
 // ============================
 // Render leaderboard
 // ============================
-function renderLeaderboard(char){
-  const box=document.getElementById('leaderboardDiv');
-  box.innerHTML='';
-  const list=mergedData.filter(p=>p.character===char).sort((a,b)=>b.hours-a.hours).slice(0,10);
-  const html=list.map((p,i)=>`
+function renderLeaderboard(char) {
+  const box = document.getElementById('leaderboardDiv');
+  const list = mergedData
+    .filter(p => p.character === char)
+    .sort((a, b) => b.hours - a.hours)
+    .slice(0, 10);
+  
+  if (list.length === 0) {
+    box.innerHTML = '<div class="loading"><p>No players found for this character.</p></div>';
+    return;
+  }
+  
+  const html = list.map((p, i) => `
     <div class="player">
-      <div style="width:30px;text-align:right;margin-right:10px;font-weight:600;color:var(--muted)">${i+1}.</div>
-      <div style="flex:1">${escapeHtml(p.name)}<br><span style='font-size:12px;color:var(--muted)'>ID: ${escapeHtml(p.id)}</span></div>
-      <div>${numberFmt(p.hours)} hrs</div>
-    </div>`).join('');
-  box.innerHTML=html;
+      <div class="rank ${getRankClass(i)}">${i + 1}</div>
+      <div class="player-info">
+        <div class="player-name">${escapeHtml(p.name)}</div>
+        <div class="player-id">ID: ${escapeHtml(p.id)}</div>
+      </div>
+      <div class="player-hours">${numberFmt(p.hours)} <span>hrs</span></div>
+    </div>
+  `).join('');
+  
+  box.innerHTML = html;
 }
 
 // ============================
 // Search
 // ============================
-function search(q){
-  q=q.toLowerCase();
-  const box=document.getElementById('leaderboardDiv');
-  box.innerHTML='';
-  const list=allData.filter(p=>p.name.toLowerCase().includes(q)||p.id.toLowerCase().includes(q)).slice(0,20);
-  const html=list.map((p,i)=>`
+function search(q) {
+  q = q.toLowerCase().trim();
+  const box = document.getElementById('leaderboardDiv');
+  
+  if (!q) {
+    renderLeaderboard(document.getElementById('charSelect').value);
+    return;
+  }
+  
+  const list = allData
+    .filter(p => p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q))
+    .sort((a, b) => b.hours - a.hours)
+    .slice(0, 20);
+  
+  if (list.length === 0) {
+    box.innerHTML = '<div class="loading"><p>No players found matching your search.</p></div>';
+    return;
+  }
+  
+  const html = list.map((p, i) => `
     <div class="player">
-      <div style="width:30px;text-align:right;margin-right:10px;font-weight:600;color:var(--muted)">${i+1}.</div>
-      <div style="flex:1">${escapeHtml(p.name)}<br><span style='font-size:12px;color:var(--muted)'>ID: ${escapeHtml(p.id)} • ${p.character}</span></div>
-      <div>${numberFmt(p.hours)} hrs</div>
-    </div>`).join('');
-  box.innerHTML=html;
+      <div class="rank">${i + 1}</div>
+      <div class="player-info">
+        <div class="player-name">${escapeHtml(p.name)}</div>
+        <div class="player-id">ID: ${escapeHtml(p.id)} • ${p.character}</div>
+      </div>
+      <div class="player-hours">${numberFmt(p.hours)} <span>hrs</span></div>
+    </div>
+  `).join('');
+  
+  box.innerHTML = html;
 }
 
 // ============================
 // Initialize
 // ============================
-fetchAll().then(()=>renderLeaderboard('Nami'));
-document.getElementById('charSelect').addEventListener('change', e=>renderLeaderboard(e.target.value));
-document.getElementById('mainSearch').addEventListener('input', e=>search(e.target.value));
+fetchAll().then(() => renderLeaderboard('Nami'));
+document.getElementById('charSelect').addEventListener('change', e => renderLeaderboard(e.target.value));
+document.getElementById('mainSearch').addEventListener('input', e => search(e.target.value));
 </script>
 </body>
 </html>

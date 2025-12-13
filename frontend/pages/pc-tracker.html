@@ -1,184 +1,368 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>PC Tracker</title>
-
-<style>
-:root {
-  --bg:#0d1117;
-  --card:#161b22;
-  --text:#e6edf3;
-  --muted:#8b949e;
-  --glass:rgba(255,255,255,0.05);
-  --blue:#1f6feb;
-  --blue-hover:#388bfd;
-}
-[data-theme="light"] {
-  --bg:#f5f7fa;
-  --card:#ffffff;
-  --text:#1a1a1a;
-  --muted:#6b7280;
-  --glass:rgba(0,0,0,0.05);
-  --blue:#1a73e8;
-  --blue-hover:#185ec4;
-}
-body {
-  margin:0;
-  font-family:Inter, sans-serif;
-  background:var(--bg);
-  color:var(--text);
-  padding:20px;
-  display:flex;
-  justify-content:center;
-}
-.container {
-  width:100%;
-  max-width:920px;
-}
-h2 {
-  margin-top:0;
-}
-.top-buttons {
-  display:flex;
-  gap:10px;
-  margin-bottom:16px;
-  flex-wrap:wrap;
-}
-.navbtn {
-  background:var(--blue);
-  border:none;
-  color:white;
-  padding:10px 14px;
-  border-radius:8px;
-  cursor:pointer;
-  font-weight:600;
-}
-.navbtn:hover { background:var(--blue-hover); }
-
-.pc-grid {
-  display:grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap:14px;
-}
-.pc-card {
-  background:var(--card);
-  padding:14px;
-  border-radius:10px;
-  border:1px solid var(--glass);
-}
-.pc-card h3 {
-  margin:0 0 6px 0;
-}
-.small {
-  color:var(--muted);
-  font-size:13px;
-}
-.btn-row {
-  margin-top:8px;
-}
-.action {
-  background:var(--blue);
-  border:none;
-  padding:6px 10px;
-  color:white;
-  border-radius:6px;
-  cursor:pointer;
-  margin-right:6px;
-  font-size:14px;
-}
-.action:hover {
-  background:var(--blue-hover);
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PC Tracker | Boundless AI</title>
+  <meta name="description" content="Track PC occupancy status in real-time for Boundless AI.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --card: #12121a;
+      --card-hover: #1a1a24;
+      --muted: #8b8fa3;
+      --accent: #6366f1;
+      --accent-2: #4f46e5;
+      --accent-glow: rgba(99, 102, 241, 0.3);
+      --glass: rgba(255, 255, 255, 0.05);
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #f1f5f9;
+      --success: #22c55e;
+      --warning: #f59e0b;
+    }
+    
+    [data-theme="light"] {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --card-hover: #f1f5f9;
+      --muted: #64748b;
+      --accent: #4f46e5;
+      --accent-2: #4338ca;
+      --accent-glow: rgba(79, 70, 229, 0.2);
+      --glass: rgba(0, 0, 0, 0.03);
+      --border: rgba(0, 0, 0, 0.08);
+      --text: #0f172a;
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px;
+    }
+    
+    .app {
+      width: 100%;
+      max-width: 1000px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text);
+    }
+    
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 18px;
+    }
+    
+    .logo-text {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    
+    .nav-links {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    
+    .nav-link {
+      padding: 10px 16px;
+      border-radius: 10px;
+      background: var(--card);
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      transition: all 0.2s ease;
+    }
+    
+    .nav-link:hover, .nav-link.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+    
+    /* Page Title */
+    .page-title {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    
+    /* PC Grid */
+    .pc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    
+    .pc-card {
+      background: var(--card);
+      padding: 20px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      transition: all 0.2s ease;
+    }
+    
+    .pc-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+    
+    .pc-card h3 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .status-badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    
+    .status-badge.occupied {
+      background: rgba(245, 158, 11, 0.2);
+      color: var(--warning);
+    }
+    
+    .status-badge.free {
+      background: rgba(34, 197, 94, 0.2);
+      color: var(--success);
+    }
+    
+    .pc-info {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    
+    .pc-info-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+    }
+    
+    .pc-info-label {
+      color: var(--muted);
+    }
+    
+    .pc-info-value {
+      font-weight: 600;
+    }
+    
+    .btn-row {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .action-btn {
+      flex: 1;
+      padding: 10px 16px;
+      border-radius: 10px;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .action-btn.occupied {
+      background: rgba(245, 158, 11, 0.2);
+      color: var(--warning);
+    }
+    
+    .action-btn.occupied:hover {
+      background: var(--warning);
+      color: #1a1a1a;
+    }
+    
+    .action-btn.free {
+      background: rgba(34, 197, 94, 0.2);
+      color: var(--success);
+    }
+    
+    .action-btn.free:hover {
+      background: var(--success);
+      color: #1a1a1a;
+    }
+    
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 60px;
+      color: var(--muted);
+    }
+    
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--glass);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Responsive */
+    @media (max-width: 640px) {
+      body { padding: 16px; }
+      .header { flex-direction: column; align-items: stretch; }
+      .nav-links { justify-content: center; }
+    }
+  </style>
 </head>
-
 <body>
-<div class="container">
+  <div class="app">
+    
+    <!-- Header -->
+    <header class="header">
+      <a href="../index.html" class="logo">
+        <div class="logo-icon">B</div>
+        <span class="logo-text">Boundless AI</span>
+      </a>
+      <nav class="nav-links">
+        <a href="../index.html" class="nav-link">Home</a>
+        <a href="leaderboard.html" class="nav-link">Leaderboard</a>
+        <a href="pc-tracker.html" class="nav-link active">PC Tracker</a>
+        <a href="20plus.html" class="nav-link">20+ Hours</a>
+        <a href="report.html" class="nav-link">Reports</a>
+      </nav>
+    </header>
 
-  <div class="top-buttons">
-    <button class="navbtn" onclick="window.location.href='index.html'">🏆 Leaderboard</button>
-    <button class="navbtn" onclick="window.location.href='20plus.html'">⏳ 20+ Hours</button>
-    <button class="navbtn" onclick="window.location.href='report.html'">📄 Report</button>
+    <h1 class="page-title">🖥️ PC Occupancy Tracker</h1>
+    
+    <div id="pcGrid" class="pc-grid">
+      <div class="loading">
+        <div class="loading-spinner"></div>
+        <p>Loading PC status...</p>
+      </div>
+    </div>
   </div>
 
-  <h2>PC Occupancy Tracker</h2>
-  <div id="pcGrid" class="pc-grid">Loading...</div>
-
-</div>
-
 <script>
-// =======================================================
-// CONFIG
-// =======================================================
-const BACKEND = "https://boundless-backend-vo5t.onrender.com"; // CHANGE THIS
+const BACKEND = "https://boundless-backend-vo5t.onrender.com";
 const WS_URL = BACKEND.replace("https://", "wss://");
 
-// =======================================================
-// THEME AUTO
-// =======================================================
+// Theme
 (function(){
   const prefersLight = window.matchMedia("(prefers-color-scheme: light)").matches;
   document.documentElement.setAttribute("data-theme", prefersLight ? "light" : "dark");
 })();
 
-// =======================================================
-// LOAD PCs
-// =======================================================
+// Load PCs
 async function loadPCs() {
   try {
     const res = await fetch(`${BACKEND}/pcs`);
     const pcs = await res.json();
     renderPCs(pcs);
   } catch (err) {
-    pcGrid.innerHTML = "<p style='color:red'>Failed to load.</p>";
+    document.getElementById("pcGrid").innerHTML = `
+      <div class="loading">
+        <p style="color: #ef4444;">Failed to load PC status. Please try again later.</p>
+      </div>
+    `;
   }
 }
 
-function renderPCs(pcs){
+function renderPCs(pcs) {
   const grid = document.getElementById("pcGrid");
-  grid.innerHTML = "";
-
-  pcs.forEach(pc => {
-    const card = document.createElement("div");
-    card.className = "pc-card";
-
-    card.innerHTML = `
-      <h3>${pc.name}</h3>
-      <div>Status: <b>${pc.status}</b></div>
-      <div class="small">By: ${pc.updated_by || "—"}</div>
-      <div class="small">At: ${pc.updated_at ? new Date(pc.updated_at).toLocaleString() : "—"}</div>
-      <div class="small">Uptime: ${pc.total_uptime.toFixed(2)} hrs</div>
-      <div class="small">Downtime: ${pc.total_downtime.toFixed(2)} hrs</div>
-
-      <div class="btn-row">
-        <button class="action" onclick="updatePC('${pc.name}','occupied')">Occupied</button>
-        <button class="action" onclick="updatePC('${pc.name}','free')">Free</button>
+  
+  if (!pcs || pcs.length === 0) {
+    grid.innerHTML = '<div class="loading"><p>No PCs available.</p></div>';
+    return;
+  }
+  
+  grid.innerHTML = pcs.map(pc => `
+    <div class="pc-card">
+      <h3>
+        ${pc.name}
+        <span class="status-badge ${pc.status}">${pc.status}</span>
+      </h3>
+      <div class="pc-info">
+        <div class="pc-info-row">
+          <span class="pc-info-label">Updated by</span>
+          <span class="pc-info-value">${pc.updated_by || "—"}</span>
+        </div>
+        <div class="pc-info-row">
+          <span class="pc-info-label">Last update</span>
+          <span class="pc-info-value">${pc.updated_at ? new Date(pc.updated_at).toLocaleString() : "—"}</span>
+        </div>
+        <div class="pc-info-row">
+          <span class="pc-info-label">Total uptime</span>
+          <span class="pc-info-value">${pc.total_uptime.toFixed(2)} hrs</span>
+        </div>
+        <div class="pc-info-row">
+          <span class="pc-info-label">Total downtime</span>
+          <span class="pc-info-value">${pc.total_downtime.toFixed(2)} hrs</span>
+        </div>
       </div>
-    `;
-
-    grid.appendChild(card);
-  });
+      <div class="btn-row">
+        <button class="action-btn occupied" onclick="updatePC('${pc.name}','occupied')">Mark Occupied</button>
+        <button class="action-btn free" onclick="updatePC('${pc.name}','free')">Mark Free</button>
+      </div>
+    </div>
+  `).join('');
 }
 
-async function updatePC(name, status){
+async function updatePC(name, status) {
   let updatedBy = null;
-
   if (status === "occupied") {
     updatedBy = prompt("Enter your name:");
+    if (!updatedBy) return;
   }
 
   await fetch(`${BACKEND}/update`, {
     method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({ pc:name, status, updatedBy })
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ pc: name, status, updatedBy })
   });
 }
 
-// =======================================================
 // WebSocket for Live Updates
-// =======================================================
 const ws = new WebSocket(WS_URL);
 ws.onmessage = (ev) => {
   const msg = JSON.parse(ev.data);
@@ -189,6 +373,5 @@ ws.onmessage = (ev) => {
 
 loadPCs();
 </script>
-
 </body>
 </html>

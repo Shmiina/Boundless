@@ -9,6 +9,7 @@
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.21.2",
+    "lovable-tagger": "^1.1.13",
     "lowdb": "^6.1.1",
     "ws": "^8.18.3"
   }

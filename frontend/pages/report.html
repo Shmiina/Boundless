@@ -1,174 +1,423 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Reports</title>
-
-<!-- Chart.js CDN -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<style>
-:root {
-  --bg:#0d1117;
-  --card:#161b22;
-  --text:#e6edf3;
-  --muted:#8b949e;
-  --glass:rgba(255,255,255,0.05);
-  --blue:#1f6feb;
-  --blue-hover:#388bfd;
-}
-body { margin:0; padding:20px; font-family:Inter,sans-serif; background:var(--bg); color:var(--text);}
-.container { max-width:900px; margin:auto; }
-.backbtn { background:var(--blue); color:white; padding:10px 14px; border-radius:8px; border:none; cursor:pointer; margin-bottom:20px;}
-.backbtn:hover { background:var(--blue-hover);}
-h2 { margin-top:0; margin-bottom:16px;}
-.tabs { display:flex; gap:10px; margin-bottom:20px; }
-.tab { padding:10px 14px; background:var(--card); border-radius:8px; cursor:pointer; user-select:none; }
-.tab.active { background:var(--blue); color:white; }
-.card, .chart-card { background:var(--card); padding:16px; border-radius:10px; border:1px solid var(--glass); margin-bottom:12px; }
-#pcFilter { margin-bottom:16px; padding:6px 10px; border-radius:6px; border:none; background:var(--card); color:var(--text); }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reports | Boundless AI</title>
+  <meta name="description" content="View PC usage reports and weekly summaries for Boundless AI.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --card: #12121a;
+      --card-hover: #1a1a24;
+      --muted: #8b8fa3;
+      --accent: #6366f1;
+      --accent-2: #4f46e5;
+      --accent-glow: rgba(99, 102, 241, 0.3);
+      --glass: rgba(255, 255, 255, 0.05);
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #f1f5f9;
+    }
+    
+    [data-theme="light"] {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --card-hover: #f1f5f9;
+      --muted: #64748b;
+      --accent: #4f46e5;
+      --accent-2: #4338ca;
+      --accent-glow: rgba(79, 70, 229, 0.2);
+      --glass: rgba(0, 0, 0, 0.03);
+      --border: rgba(0, 0, 0, 0.08);
+      --text: #0f172a;
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px;
+    }
+    
+    .app {
+      width: 100%;
+      max-width: 1000px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text);
+    }
+    
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 18px;
+    }
+    
+    .logo-text {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    
+    .nav-links {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    
+    .nav-link {
+      padding: 10px 16px;
+      border-radius: 10px;
+      background: var(--card);
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      transition: all 0.2s ease;
+    }
+    
+    .nav-link:hover, .nav-link.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+    
+    /* Page Title */
+    .page-title {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    
+    .tab {
+      padding: 12px 20px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+    
+    .tab:hover {
+      border-color: var(--accent);
+    }
+    
+    .tab.active {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: white;
+      border-color: var(--accent);
+    }
+    
+    /* Filter */
+    .filter-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    .filter-select {
+      padding: 12px 16px;
+      border-radius: 10px;
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border);
+      font-size: 14px;
+      cursor: pointer;
+    }
+    
+    /* Card */
+    .card {
+      background: var(--card);
+      padding: 20px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+    }
+    
+    .card h3 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    
+    .card h4 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .stat-row:last-child {
+      border-bottom: none;
+    }
+    
+    .stat-label {
+      color: var(--muted);
+    }
+    
+    .stat-value {
+      font-weight: 600;
+    }
+    
+    /* Chart Card */
+    .chart-card {
+      background: var(--card);
+      padding: 20px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+    
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--muted);
+    }
+    
+    /* Responsive */
+    @media (max-width: 640px) {
+      body { padding: 16px; }
+      .header { flex-direction: column; align-items: stretch; }
+      .nav-links { justify-content: center; }
+    }
+  </style>
 </head>
 <body>
+  <div class="app">
+    
+    <!-- Header -->
+    <header class="header">
+      <a href="../index.html" class="logo">
+        <div class="logo-icon">B</div>
+        <span class="logo-text">Boundless AI</span>
+      </a>
+      <nav class="nav-links">
+        <a href="../index.html" class="nav-link">Home</a>
+        <a href="leaderboard.html" class="nav-link">Leaderboard</a>
+        <a href="pc-tracker.html" class="nav-link">PC Tracker</a>
+        <a href="20plus.html" class="nav-link">20+ Hours</a>
+        <a href="report.html" class="nav-link active">Reports</a>
+      </nav>
+    </header>
 
-<div class="container">
-<button class="backbtn" onclick="window.location.href='pc-tracker.html'">⬅ Back</button>
+    <h1 class="page-title">📊 Reports</h1>
 
-<h2>📄 Reports</h2>
+    <div class="tabs">
+      <div class="tab active" data-tab="yesterday" onclick="switchTab('yesterday')">Yesterday</div>
+      <div class="tab" data-tab="weekly" onclick="switchTab('weekly')">Weekly Summary</div>
+    </div>
 
-<div class="tabs">
-  <div class="tab active" data-tab="yesterday" onclick="switchTab('yesterday')">Yesterday</div>
-  <div class="tab" data-tab="weekly" onclick="switchTab('weekly')">Weekly Summary</div>
-</div>
+    <div class="filter-row">
+      <label style="color: var(--muted);">Filter by PC:</label>
+      <select id="pcFilter" class="filter-select" onchange="updateWeeklyCharts()">
+        <option value="all">All PCs</option>
+      </select>
+    </div>
 
-<!-- PC Filter -->
-<select id="pcFilter" onchange="updateWeeklyCharts()">
-  <option value="all">All PCs</option>
-</select>
+    <!-- Yesterday Report -->
+    <div id="yesterdayTab">
+      <div class="card">
+        <h3>Yesterday — <span id="dateHeader"></span></h3>
+        <div id="yesterdayReport">
+          <div class="loading">Loading report...</div>
+        </div>
+      </div>
+    </div>
 
-<!-- Yesterday Report -->
-<div id="yesterdayTab">
-  <h3>Yesterday — <span id="dateHeader"></span></h3>
-  <div id="yesterdayReport">Loading...</div>
-</div>
-
-<!-- Weekly Summary -->
-<div id="weeklyTab" style="display:none;">
-  <div id="weeklyCharts"></div>
-</div>
-
-</div>
+    <!-- Weekly Summary -->
+    <div id="weeklyTab" style="display:none;">
+      <div id="weeklyCharts">
+        <div class="loading">Loading charts...</div>
+      </div>
+    </div>
+  </div>
 
 <script>
 const BACKEND = "https://boundless-backend-vo5t.onrender.com";
 
-// --- Tabs ---
-function switchTab(tabName){
-  document.getElementById('yesterdayTab').style.display = tabName==='yesterday'?'block':'none';
-  document.getElementById('weeklyTab').style.display = tabName==='weekly'?'block':'none';
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+// Theme
+(function(){
+  const prefersLight = window.matchMedia("(prefers-color-scheme: light)").matches;
+  document.documentElement.setAttribute("data-theme", prefersLight ? "light" : "dark");
+})();
+
+// Tabs
+function switchTab(tabName) {
+  document.getElementById('yesterdayTab').style.display = tabName === 'yesterday' ? 'block' : 'none';
+  document.getElementById('weeklyTab').style.display = tabName === 'weekly' ? 'block' : 'none';
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelector(`.tab[data-tab=${tabName}]`).classList.add('active');
 }
 
-// --- Yesterday Report ---
-async function loadYesterday(){
+// Yesterday Report
+async function loadYesterday() {
   const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate()-1);
-  const yDate = yesterday.toISOString().slice(0,10);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yDate = yesterday.toISOString().slice(0, 10);
   document.getElementById("dateHeader").innerText = yDate;
 
   try {
     const res = await fetch(`${BACKEND}/yesterday`);
     const data = await res.json();
     const container = document.getElementById("yesterdayReport");
-    container.innerHTML = "";
-    if(data.length===0){ container.innerHTML="<p style='color:#888'>No data available for yesterday.</p>"; return; }
+    
+    if (data.length === 0) {
+      container.innerHTML = '<div class="loading">No data available for yesterday.</div>';
+      return;
+    }
 
-    data.forEach(pc=>{
-      const div = document.createElement("div");
-      div.className="card";
-      div.innerHTML = `<h4>${pc.name}</h4><div>Uptime: <b>${pc.total_uptime.toFixed(2)}</b> hrs</div><div>Downtime: <b>${pc.total_downtime.toFixed(2)}</b> hrs</div>`;
-      container.appendChild(div);
-    });
-  } catch(err){
+    container.innerHTML = data.map(pc => `
+      <div style="margin-bottom: 16px;">
+        <h4>${pc.name}</h4>
+        <div class="stat-row">
+          <span class="stat-label">Uptime</span>
+          <span class="stat-value">${pc.total_uptime.toFixed(2)} hrs</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Downtime</span>
+          <span class="stat-value">${pc.total_downtime.toFixed(2)} hrs</span>
+        </div>
+      </div>
+    `).join('');
+  } catch (err) {
     console.error(err);
-    document.getElementById("yesterdayReport").innerHTML="<p style='color:red'>Failed to load report.</p>";
+    document.getElementById("yesterdayReport").innerHTML = '<div class="loading" style="color: #ef4444;">Failed to load report.</div>';
   }
 }
 
-// --- Weekly Summary ---
+// Weekly Summary
 let weeklyData = {};
 let chartObjects = [];
 
-function getLast7Days(){
-  const days=[];
-  for(let i=6;i>=0;i--){
+function getLast7Days() {
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
     const d = new Date();
-    d.setDate(d.getDate()-i);
-    days.push(d.toISOString().slice(0,10));
+    d.setDate(d.getDate() - i);
+    days.push(d.toISOString().slice(0, 10));
   }
   return days;
 }
 
-async function loadWeeklySummary(){
+async function loadWeeklySummary() {
   const days = getLast7Days();
   const chartsDiv = document.getElementById("weeklyCharts");
-  chartsDiv.innerHTML="";
   weeklyData = {};
 
-  const res = await fetch(`${BACKEND}/pcs_history_week?days=${days.join(",")}`);
-  const data = await res.json();
-  weeklyData = data;
+  try {
+    const res = await fetch(`${BACKEND}/pcs_history_week?days=${days.join(",")}`);
+    const data = await res.json();
+    weeklyData = data;
 
-  const filterSelect = document.getElementById("pcFilter");
-  filterSelect.innerHTML = `<option value="all">All PCs</option>`;
-  Object.keys(data).forEach(pc=> filterSelect.innerHTML+=`<option value="${pc}">${pc}</option>`);
+    const filterSelect = document.getElementById("pcFilter");
+    filterSelect.innerHTML = '<option value="all">All PCs</option>';
+    Object.keys(data).forEach(pc => {
+      filterSelect.innerHTML += `<option value="${pc}">${pc}</option>`;
+    });
 
-  updateWeeklyCharts();
+    updateWeeklyCharts();
+  } catch (err) {
+    chartsDiv.innerHTML = '<div class="loading" style="color: #ef4444;">Failed to load weekly data.</div>';
+  }
 }
 
-function updateWeeklyCharts(){
-  // Clear existing charts
-  chartObjects.forEach(c=>c.destroy());
-  chartObjects=[];
+function updateWeeklyCharts() {
+  chartObjects.forEach(c => c.destroy());
+  chartObjects = [];
+  
   const chartsDiv = document.getElementById("weeklyCharts");
-  chartsDiv.innerHTML="";
+  chartsDiv.innerHTML = "";
 
   const selectedPC = document.getElementById("pcFilter").value;
-  const pcsToShow = selectedPC==="all"?Object.keys(weeklyData):[selectedPC];
+  const pcsToShow = selectedPC === "all" ? Object.keys(weeklyData) : [selectedPC];
 
-  pcsToShow.forEach(pcName=>{
+  if (pcsToShow.length === 0) {
+    chartsDiv.innerHTML = '<div class="loading">No data available.</div>';
+    return;
+  }
+
+  pcsToShow.forEach(pcName => {
     const canvas = document.createElement("canvas");
     const card = document.createElement("div");
-    card.className="chart-card";
+    card.className = "chart-card";
+    card.innerHTML = `<h4 style="margin-bottom: 16px; font-weight: 600;">${pcName}</h4>`;
     card.appendChild(canvas);
     chartsDiv.appendChild(card);
 
-    const labels = weeklyData[pcName].map(d=>d.date);
-    const uptimeData = weeklyData[pcName].map(d=>d.uptime);
-    const downtimeData = weeklyData[pcName].map(d=>d.downtime);
+    const labels = weeklyData[pcName].map(d => d.date);
+    const uptimeData = weeklyData[pcName].map(d => d.uptime);
+    const downtimeData = weeklyData[pcName].map(d => d.downtime);
 
-    const chart = new Chart(canvas,{
-      type:"bar",
-      data:{
+    const chart = new Chart(canvas, {
+      type: "bar",
+      data: {
         labels,
-        datasets:[
-          { label:"Uptime (hrs)", data:uptimeData, backgroundColor:"#1f6feb" },
-          { label:"Downtime (hrs)", data:downtimeData, backgroundColor:"#388bfd" }
+        datasets: [
+          { label: "Uptime (hrs)", data: uptimeData, backgroundColor: "#6366f1" },
+          { label: "Downtime (hrs)", data: downtimeData, backgroundColor: "#a5b4fc" }
         ]
       },
-      options:{ responsive:true, plugins:{legend:{position:"top"}}, scales:{y:{beginAtZero:true}} }
+      options: {
+        responsive: true,
+        plugins: { legend: { position: "top" } },
+        scales: { y: { beginAtZero: true } }
+      }
     });
     chartObjects.push(chart);
   });
 }
 
-// --- Load all ---
+// Load all
 loadYesterday();
 loadWeeklySummary();
-
 </script>
-
 </body>
 </html>

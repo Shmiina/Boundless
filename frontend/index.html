@@ -1,75 +1,574 @@
-<!doctype html>
-<html>
-
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <title>BOUNDLESS AI</title>
-  <meta charset="utf-8" name="viewport" content="width=device-width, initial-scale=1">
-  <link href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" media="screen" rel="stylesheet" type="text/css" />
-  <link href="css/frame.css" media="screen" rel="stylesheet" type="text/css" />
-  <link href="css/controls.css" media="screen" rel="stylesheet" type="text/css" />
-  <link href="css/custom.css" media="screen" rel="stylesheet" type="text/css" />
-  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
-  <link href='https://fonts.googleapis.com/css?family=Open+Sans+Condensed:300,700' rel='stylesheet' type='text/css'>
-  <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700" rel="stylesheet">
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-  <script src="js/menu.js"></script>
-  <script src="js/footer.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Boundless AI - Player Tracking & Leaderboards</title>
+  <meta name="description" content="Boundless AI - Track player hours, view leaderboards, and monitor PC status in real-time.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    .menu-index {
-      color: rgb(255, 255, 255) !important;
-      opacity: 1 !important;
-      font-weight: 700 !important;
+    :root {
+      --bg: #0a0a0f;
+      --card: #12121a;
+      --card-hover: #1a1a24;
+      --muted: #8b8fa3;
+      --accent: #6366f1;
+      --accent-2: #4f46e5;
+      --accent-glow: rgba(99, 102, 241, 0.3);
+      --glass: rgba(255, 255, 255, 0.05);
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #f1f5f9;
+      --gradient: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7);
+    }
+    
+    [data-theme="light"] {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --card-hover: #f1f5f9;
+      --muted: #64748b;
+      --accent: #4f46e5;
+      --accent-2: #4338ca;
+      --accent-glow: rgba(79, 70, 229, 0.2);
+      --glass: rgba(0, 0, 0, 0.03);
+      --border: rgba(0, 0, 0, 0.08);
+      --text: #0f172a;
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    
+    /* Header */
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 16px 24px;
+      background: rgba(10, 10, 15, 0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    
+    [data-theme="light"] .header {
+      background: rgba(248, 250, 252, 0.8);
+    }
+    
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text);
+    }
+    
+    .logo-icon {
+      width: 44px;
+      height: 44px;
+      background: var(--gradient);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 20px;
+      color: white;
+    }
+    
+    .logo-text {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .nav-links {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    
+    .nav-link {
+      padding: 10px 18px;
+      border-radius: 10px;
+      background: var(--glass);
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      transition: all 0.2s ease;
+    }
+    
+    .nav-link:hover {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+    
+    .theme-toggle {
+      padding: 10px;
+      border-radius: 10px;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 18px;
+      transition: all 0.2s ease;
+    }
+    
+    .theme-toggle:hover {
+      border-color: var(--accent);
+    }
+    
+    /* Hero Section */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 800px;
+      height: 800px;
+      background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 30px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+    
+    .hero-badge span {
+      color: var(--accent);
+    }
+    
+    .hero-title {
+      font-size: clamp(40px, 8vw, 72px);
+      font-weight: 800;
+      letter-spacing: -2px;
+      line-height: 1.1;
+      margin-bottom: 24px;
+      max-width: 800px;
+    }
+    
+    .hero-title .gradient {
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .hero-subtitle {
+      font-size: 18px;
+      color: var(--muted);
+      max-width: 600px;
+      line-height: 1.7;
+      margin-bottom: 40px;
+    }
+    
+    .hero-buttons {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    
+    .btn {
+      padding: 16px 32px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .btn-primary {
+      background: var(--gradient);
+      color: white;
+      border: none;
+      box-shadow: 0 8px 30px var(--accent-glow);
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px var(--accent-glow);
+    }
+    
+    .btn-secondary {
+      background: var(--glass);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    
+    .btn-secondary:hover {
+      background: var(--card-hover);
+      border-color: var(--accent);
+    }
+    
+    /* Features Section */
+    .features {
+      padding: 100px 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .section-title {
+      text-align: center;
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 16px;
+    }
+    
+    .section-subtitle {
+      text-align: center;
+      color: var(--muted);
+      font-size: 18px;
+      margin-bottom: 60px;
+    }
+    
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+    }
+    
+    .feature-card {
+      background: var(--card);
+      padding: 32px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      transition: all 0.3s ease;
+    }
+    
+    .feature-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    }
+    
+    .feature-icon {
+      width: 56px;
+      height: 56px;
+      background: var(--gradient);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+    
+    .feature-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    
+    .feature-desc {
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    
+    /* Stats Section */
+    .stats {
+      padding: 80px 24px;
+      background: var(--card);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .stats-grid {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 40px;
+      text-align: center;
+    }
+    
+    .stat-item h3 {
+      font-size: 48px;
+      font-weight: 800;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+    
+    .stat-item p {
+      color: var(--muted);
+      font-size: 16px;
+    }
+    
+    /* CTA Section */
+    .cta {
+      padding: 100px 24px;
+      text-align: center;
+    }
+    
+    .cta-title {
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 16px;
+    }
+    
+    .cta-subtitle {
+      color: var(--muted);
+      font-size: 18px;
+      margin-bottom: 40px;
+    }
+    
+    /* Footer */
+    .footer {
+      padding: 40px 24px;
+      text-align: center;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+    
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .footer-links a {
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+    
+    .footer-links a:hover {
+      color: var(--accent);
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header-inner { flex-direction: column; }
+      .nav-links { justify-content: center; }
+      .hero { padding: 100px 16px 60px; }
+      .hero-buttons { flex-direction: column; width: 100%; max-width: 300px; }
+      .btn { justify-content: center; }
     }
   </style>
 </head>
-
 <body>
-  <div class="menu-container"></div>
-  <div class="content-container">
-    <!-------------------------------------------------------------------------------------------->
-    <!--Start Header-->
-    <div class="banner" style="background: url('img/Boundless.png') no-repeat center; background-size: cover; height: 400px;"></div>
-    <div class="banner">
-      <div class="banner-table flex-column">
-        <div class="flex-row">
-          <div class="flex-item flex-column">
-            <h2 class="add-top-margin-small">Welcome to Boundless</h2>
-            <p class="text">
-              Place Holder Cause yes
-            </p>
-          </div>
-        </div>
+  
+  <!-- Header -->
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">
+        <div class="logo-icon">B</div>
+        <span class="logo-text">Boundless AI</span>
+      </a>
+      <nav class="nav-links">
+        <a href="pages/leaderboard.html" class="nav-link">🏆 Leaderboard</a>
+        <a href="pages/pc-tracker.html" class="nav-link">🖥️ PC Tracker</a>
+        <a href="pages/20plus.html" class="nav-link">⏳ 20+ Hours</a>
+        <a href="pages/report.html" class="nav-link">📊 Reports</a>
+        <a href="https://github.com/Shmiina/" target="_blank" class="nav-link">GitHub</a>
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌗</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-badge">
+      ✨ <span>Now Live</span> — Real-time tracking enabled
+    </div>
+    <h1 class="hero-title">
+      Track Players.<br><span class="gradient">Dominate Leaderboards.</span>
+    </h1>
+    <p class="hero-subtitle">
+      Boundless AI provides comprehensive player tracking, real-time PC monitoring, 
+      and detailed analytics to help you stay on top of your gaming community.
+    </p>
+    <div class="hero-buttons">
+      <a href="pages/leaderboard.html" class="btn btn-primary">
+        🏆 View Leaderboard
+      </a>
+      <a href="pages/pc-tracker.html" class="btn btn-secondary">
+        🖥️ PC Tracker
+      </a>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features">
+    <h2 class="section-title">Everything You Need</h2>
+    <p class="section-subtitle">Powerful tools to track, analyze, and dominate</p>
+    
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🏆</div>
+        <h3 class="feature-title">Live Leaderboards</h3>
+        <p class="feature-desc">
+          Real-time player rankings across multiple characters. See who's putting in the hours and climbing the ranks.
+        </p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">🖥️</div>
+        <h3 class="feature-title">PC Tracker</h3>
+        <p class="feature-desc">
+          Monitor PC occupancy in real-time with WebSocket updates. Know which stations are available instantly.
+        </p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3 class="feature-title">Detailed Reports</h3>
+        <p class="feature-desc">
+          Daily and weekly analytics with beautiful charts. Track uptime, downtime, and usage patterns.
+        </p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">🔍</div>
+        <h3 class="feature-title">Player Search</h3>
+        <p class="feature-desc">
+          Find any player instantly by name or ID. Quick access to player stats across all characters.
+        </p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">⏳</div>
+        <h3 class="feature-title">20+ Hours Club</h3>
+        <p class="feature-desc">
+          Dedicated leaderboard for the most committed players. Celebrate those who go above and beyond.
+        </p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">🌙</div>
+        <h3 class="feature-title">Dark Mode</h3>
+        <p class="feature-desc">
+          Beautiful dark and light themes that automatically adapt to your system preferences.
+        </p>
       </div>
     </div>
-    <!--End Header-->
-    <!-------------------------------------------------------------------------------------------->
-    <div class="content">
-      <div class="content-table flex-column">
-        <!-------------------------------------------------------------------------------------------->
-        <!--Start Intro-->
-        <div class="flex-row">
-          <div class="flex-item flex-column">
-            <img class="image" src="img/dummay-img.png">
-          </div>
-          <div class="flex-item flex-column">
-            <p class="text text-large">
-              <a target="_blank" href="javascript:void(0)">PLACEHOLDER</a> PLACEHOLDER<br>
-              <a target="_blank" href="javascript:void(0)">PLACEHOLDER</a> PLACEHOLDER<br>
-              <a target="_blank" href="javascript:void(0)">PLACEHOLDER</a> PLACEHOLDER<br>
-              <a target="_blank" href="javascript:void(0)">PLACEHOLDER</a><br>
-              <a target="_blank" href="javascript:void(0)">PLACEHOLDER</a><br>
-              <a target="_blank" href="javascript:void(0)">PLACEHOLDER</a><br>
-              <a target="_blank" href="javascript:void(0)">PLACEHOLDER</a><br>
-              <a target="_blank" href="javascript:void(0)">PLACEHOLDER</a>
-            </p>
-          </div>
-        </div>
-        <div class="flex-row">
-          <div class="flex-item flex-column">
-            <p class="text add-top-margin">
-              PLACE HOLDER
-            </p>
-           
-          </div>
-        </div>
-       
+  </section>
+
+  <!-- Stats Section -->
+  <section class="stats">
+    <div class="stats-grid">
+      <div class="stat-item">
+        <h3>4</h3>
+        <p>Characters Tracked</p>
+      </div>
+      <div class="stat-item">
+        <h3>24/7</h3>
+        <p>Real-time Updates</p>
+      </div>
+      <div class="stat-item">
+        <h3>∞</h3>
+        <p>Players Supported</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta">
+    <h2 class="cta-title">Ready to Get Started?</h2>
+    <p class="cta-subtitle">Jump into the leaderboards and see where you stand</p>
+    <a href="pages/leaderboard.html" class="btn btn-primary">
+      🚀 Launch Leaderboard
+    </a>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-links">
+      <a href="pages/leaderboard.html">Leaderboard</a>
+      <a href="pages/pc-tracker.html">PC Tracker</a>
+      <a href="pages/20plus.html">20+ Hours</a>
+      <a href="pages/report.html">Reports</a>
+      <a href="https://github.com/Shmiina/" target="_blank">GitHub</a>
+    </div>
+    <p>© 2024 Boundless AI. Built with ❤️</p>
+  </footer>
+
+<script>
+// Theme Management
+let themeMode = localStorage.getItem('ph_theme') || 'auto';
+
+function applyTheme(mode) {
+  const resolved = mode === 'auto' 
+    ? (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') 
+    : mode;
+  document.documentElement.setAttribute('data-theme', resolved);
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  const newTheme = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', newTheme);
+  localStorage.setItem('ph_theme', newTheme);
+}
+
+applyTheme(themeMode);
+
+// Smooth scroll for anchor links
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  anchor.addEventListener('click', function (e) {
+    e.preventDefault();
+    document.querySelector(this.getAttribute('href')).scrollIntoView({
+      behavior: 'smooth'
+    });
+  });
+});
+</script>
+</body>
+</html>
