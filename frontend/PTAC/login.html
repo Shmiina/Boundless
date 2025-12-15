@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>User Dashboard</title>
   <style>
-    body { font-family: Arial, sans-serif; }
+    body { font-family: Arial; }
     table { border-collapse: collapse; width: 80%; margin-top: 10px; }
     th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
     th { background-color: #f2f2f2; }
@@ -38,25 +38,21 @@
 </div>
 
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwV5V6KsTG9lw6UfKbvEq1VprfGskXD_kglU0seyzPmw06arWxhQS5BGI5mh6cZLCTkIw/exec"; // Replace with your Web App URL
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwV5V6KsTG9lw6UfKbvEq1VprfGskXD_kglU0seyzPmw06arWxhQS5BGI5mh6cZLCTkIw/exec"; // Replace with your deployed script URL
 let currentSheet = "";
 let currentData = [];
 let currentUsername = "";
 
-// Show loading
 function showLoading(isLoading) {
   document.getElementById("loading").style.display = isLoading ? "block" : "none";
   document.getElementById("message").innerText = "";
 }
 
-// Show error
 function showError(msg) {
   document.getElementById("message").innerText = msg;
 }
 
-// -------------------------
-// SIGNUP
-// -------------------------
+// Signup
 async function signupUser() {
   const username = document.getElementById("signupUsername").value.trim();
   const password = document.getElementById("signupPassword").value.trim();
@@ -74,14 +70,10 @@ async function signupUser() {
     alert(result);
   } catch (err) {
     showError("Signup failed: " + err.message);
-  } finally {
-    showLoading(false);
-  }
+  } finally { showLoading(false); }
 }
 
-// -------------------------
-// LOGIN
-// -------------------------
+// Login
 async function loginUser() {
   const username = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value.trim();
@@ -95,12 +87,8 @@ async function loginUser() {
       body: JSON.stringify({action: "login", username, password}),
       headers: { "Content-Type": "application/json" }
     });
-
     const result = await response.json();
-    if (result.error || !result.sheetName) {
-      showError(result.error || "Login failed");
-      return;
-    }
+    if (result.error || !result.sheetName) { showError(result.error || "Login failed"); return; }
 
     currentSheet = result.sheetName;
     currentData = result.data;
@@ -110,16 +98,11 @@ async function loginUser() {
     document.getElementById("welcome").innerText = "Welcome, " + username;
     renderTable(currentData);
 
-  } catch (err) {
-    showError("Login failed: " + err.message);
-  } finally {
-    showLoading(false);
-  }
+  } catch (err) { showError("Login failed: " + err.message); }
+  finally { showLoading(false); }
 }
 
-// -------------------------
-// RENDER TABLE
-// -------------------------
+// Render table
 function renderTable(data) {
   let html = "<table><tr>";
   data[0].forEach(header => html += `<th>${header}</th>`);
@@ -136,14 +119,11 @@ function renderTable(data) {
   document.getElementById("data").innerHTML = html;
 }
 
-// -------------------------
-// SAVE DATA
-// -------------------------
+// Save data
 async function saveData() {
   const inputs = document.querySelectorAll("#data input");
   const updated = [];
   updated.push(currentData[0]); // headers
-
   const temp = [];
   inputs.forEach(input => {
     const row = parseInt(input.dataset.row);
@@ -151,7 +131,6 @@ async function saveData() {
     if (!temp[row]) temp[row] = [];
     temp[row][col] = input.value;
   });
-
   for (let i = 1; i < temp.length; i++) updated.push(temp[i]);
 
   showLoading(true);
@@ -164,16 +143,11 @@ async function saveData() {
     });
     const result = await response.text();
     alert(result);
-  } catch (err) {
-    showError("Save failed: " + err.message);
-  } finally {
-    showLoading(false);
-  }
+  } catch(err) { showError("Save failed: " + err.message); }
+  finally { showLoading(false); }
 }
 
-// -------------------------
-// LOGOUT
-// -------------------------
+// Logout
 async function logoutUser() {
   showLoading(true);
   try {
@@ -192,11 +166,8 @@ async function logoutUser() {
     currentData = [];
     currentUsername = "";
 
-  } catch (err) {
-    showError("Logout failed: " + err.message);
-  } finally {
-    showLoading(false);
-  }
+  } catch(err) { showError("Logout failed: " + err.message); }
+  finally { showLoading(false); }
 }
 </script>
 
