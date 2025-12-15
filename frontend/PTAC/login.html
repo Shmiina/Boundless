@@ -1,30 +1,30 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>User Dashboard</title>
-  <style>
-    body { font-family: Arial; }
-    table { border-collapse: collapse; width: 80%; margin-top: 10px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-    th { background-color: #f2f2f2; }
-    input { width: 100%; box-sizing: border-box; }
-    #dashboard { display: none; margin-top: 20px; }
-    #loading { display: none; color: blue; margin-top: 10px; }
-    button { margin: 5px; padding: 5px 10px; }
-    .error { color: red; }
-  </style>
+<meta charset="UTF-8">
+<title>PTAC Dashboard</title>
+<style>
+  body { font-family: Arial; padding: 20px; }
+  input { width: 100%; box-sizing: border-box; }
+  table { border-collapse: collapse; width: 90%; margin-top: 10px; }
+  th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+  th { background-color: #f2f2f2; }
+  #dashboard { display: none; margin-top: 20px; }
+  #loading { display: none; color: blue; }
+  .error { color: red; }
+  button { margin: 5px; padding: 5px 10px; }
+</style>
 </head>
 <body>
 
 <h2>Sign Up</h2>
-<input type="text" id="signupUsername" placeholder="Enter ID">
-<input type="password" id="signupPassword" placeholder="Enter Password">
+<input type="email" id="signupEmail" placeholder="Email">
+<input type="password" id="signupPassword" placeholder="Password">
 <button onclick="signupUser()">Sign Up</button>
 
 <h2>Login</h2>
-<input type="text" id="username" placeholder="Enter ID">
-<input type="password" id="password" placeholder="Enter Password">
+<input type="email" id="loginEmail" placeholder="Email">
+<input type="password" id="loginPassword" placeholder="Password">
 <button onclick="loginUser()">Login</button>
 
 <div id="loading">Loading...</div>
@@ -33,142 +33,170 @@
 <div id="dashboard">
   <h3 id="welcome"></h3>
   <div id="data"></div>
+  <button onclick="addRow()">Add New Row</button>
   <button onclick="saveData()">Save Changes</button>
   <button onclick="logoutUser()">Logout</button>
 </div>
 
+<!-- Supabase JS -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyok6xztZ472SwezYShtA4J6muyb_MPgsW-ad0nOlyLcCXOAkzVh4_Lbud-TLgXM6D_aQ/exec"; // Replace with your deployed script URL
-let currentSheet = "";
-let currentData = [];
-let currentUsername = "";
+  // ------------------------------
+  // Supabase Setup
+  // ------------------------------
+  const SUPABASE_URL = "https://kiceorwosbbpgskruxjl.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpY2Vvcndvc2JicGdza3J1eGpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3ODA1NjMsImV4cCI6MjA4MTM1NjU2M30.Dj_AUWPF5mdLoH7wLIqLrMNhUsk0DLDkL1wQkJKWqV4";
+  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-function showLoading(isLoading) {
-  document.getElementById("loading").style.display = isLoading ? "block" : "none";
-  document.getElementById("message").innerText = "";
-}
+  let currentUser = null;
+  let ptacData = [];
+  let rowIds = [];
 
-function showError(msg) {
-  document.getElementById("message").innerText = msg;
-}
-
-// Signup
-async function signupUser() {
-  const username = document.getElementById("signupUsername").value.trim();
-  const password = document.getElementById("signupPassword").value.trim();
-  if (!username || !password) { showError("Enter ID and password"); return; }
-
-  showLoading(true);
-  try {
-    const response = await fetch(WEB_APP_URL, {
-      method: "POST",
-      mode: "cors",
-      body: JSON.stringify({action: "signup", username, password}),
-      headers: { "Content-Type": "application/json" }
-    });
-    const result = await response.text();
-    alert(result);
-  } catch (err) {
-    showError("Signup failed: " + err.message);
-  } finally { showLoading(false); }
-}
-
-// Login
-async function loginUser() {
-  const username = document.getElementById("username").value.trim();
-  const password = document.getElementById("password").value.trim();
-  if (!username || !password) { showError("Enter ID and password"); return; }
-
-  showLoading(true);
-  try {
-    const response = await fetch(WEB_APP_URL, {
-      method: "POST",
-      mode: "cors",
-      body: JSON.stringify({action: "login", username, password}),
-      headers: { "Content-Type": "application/json" }
-    });
-    const result = await response.json();
-    if (result.error || !result.sheetName) { showError(result.error || "Login failed"); return; }
-
-    currentSheet = result.sheetName;
-    currentData = result.data;
-    currentUsername = username;
-
-    document.getElementById("dashboard").style.display = "block";
-    document.getElementById("welcome").innerText = "Welcome, " + username;
-    renderTable(currentData);
-
-  } catch (err) { showError("Login failed: " + err.message); }
-  finally { showLoading(false); }
-}
-
-// Render table
-function renderTable(data) {
-  let html = "<table><tr>";
-  data[0].forEach(header => html += `<th>${header}</th>`);
-  html += "</tr>";
-
-  for (let i = 1; i < data.length; i++) {
-    html += "<tr>";
-    for (let j = 0; j < 8; j++) {
-      html += `<td><input type='text' value='${data[i][j] || ""}' data-row='${i}' data-col='${j}'></td>`;
-    }
-    html += "</tr>";
+  const showLoading = (flag) => {
+    document.getElementById("loading").style.display = flag ? "block" : "none";
+    document.getElementById("message").innerText = "";
   }
-  html += "</table>";
-  document.getElementById("data").innerHTML = html;
-}
 
-// Save data
-async function saveData() {
-  const inputs = document.querySelectorAll("#data input");
-  const updated = [];
-  updated.push(currentData[0]); // headers
-  const temp = [];
-  inputs.forEach(input => {
-    const row = parseInt(input.dataset.row);
-    const col = parseInt(input.dataset.col);
-    if (!temp[row]) temp[row] = [];
-    temp[row][col] = input.value;
-  });
-  for (let i = 1; i < temp.length; i++) updated.push(temp[i]);
+  const showError = (msg) => {
+    document.getElementById("message").innerText = msg;
+  }
 
-  showLoading(true);
-  try {
-    const response = await fetch(WEB_APP_URL, {
-      method: "POST",
-      mode: "cors",
-      body: JSON.stringify({action: "update", sheetName: currentSheet, updatedData: updated}),
-      headers: { "Content-Type": "application/json" }
+  // ------------------------------
+  // Signup
+  // ------------------------------
+  async function signupUser() {
+    const email = document.getElementById("signupEmail").value.trim();
+    const password = document.getElementById("signupPassword").value.trim();
+    if (!email || !password) { showError("Enter email and password"); return; }
+
+    showLoading(true);
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) showError(error.message);
+    else alert("Signup successful! Please check your email.");
+    showLoading(false);
+  }
+
+  // ------------------------------
+  // Login
+  // ------------------------------
+  async function loginUser() {
+    const email = document.getElementById("loginEmail").value.trim();
+    const password = document.getElementById("loginPassword").value.trim();
+    if (!email || !password) { showError("Enter email and password"); return; }
+
+    showLoading(true);
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) { showError(error.message); showLoading(false); return; }
+
+    currentUser = data.user;
+    document.getElementById("dashboard").style.display = "block";
+    document.getElementById("welcome").innerText = `Welcome, ${currentUser.email}`;
+
+    // Load PTAC rows
+    const { data: rows, error: fetchError } = await supabase
+      .from("user_ptac")
+      .select("*")
+      .eq("user_id", currentUser.id);
+
+    if (fetchError) showError(fetchError.message);
+    else {
+      if(rows.length === 0) {
+        ptacData = [["", "", "", "", "", "", "", ""]];
+        rowIds = [];
+      } else {
+        ptacData = rows.map(r => [
+          r.session_no, r.date, r.start_time, r.end_time, r.duration,
+          r.save_file_used, r.issue ? "Y" : "N", r.initial
+        ]);
+        rowIds = rows.map(r => r.id);
+      }
+      renderTable();
+    }
+    showLoading(false);
+  }
+
+  // ------------------------------
+  // Render Table
+  // ------------------------------
+  function renderTable() {
+    let html = "<table><tr>";
+    const headers = ["Session No.","Date","Start Time","End Time","Duration","Save File Used","Issue (Y/N)","Initial"];
+    headers.forEach(h => html += `<th>${h}</th>`);
+    html += "</tr>";
+
+    ptacData.forEach((row,rowIndex) => {
+      html += "<tr>";
+      row.forEach((cell,colIndex) => {
+        html += `<td><input type='text' value='${cell||""}' data-row='${rowIndex}' data-col='${colIndex}'></td>`;
+      });
+      html += "</tr>";
     });
-    const result = await response.text();
-    alert(result);
-  } catch(err) { showError("Save failed: " + err.message); }
-  finally { showLoading(false); }
-}
+    html += "</table>";
+    document.getElementById("data").innerHTML = html;
+  }
 
-// Logout
-async function logoutUser() {
-  showLoading(true);
-  try {
-    const response = await fetch(WEB_APP_URL, {
-      method: "POST",
-      mode: "cors",
-      body: JSON.stringify({action: "logout", username: currentUsername}),
-      headers: { "Content-Type": "application/json" }
+  // ------------------------------
+  // Add New Row
+  // ------------------------------
+  function addRow() {
+    ptacData.push(["", "", "", "", "", "", "", ""]);
+    renderTable();
+  }
+
+  // ------------------------------
+  // Save Data
+  // ------------------------------
+  async function saveData() {
+    const inputs = document.querySelectorAll("#data input");
+    inputs.forEach(input => {
+      const r = parseInt(input.dataset.row);
+      const c = parseInt(input.dataset.col);
+      if(!ptacData[r]) ptacData[r] = [];
+      ptacData[r][c] = input.value;
     });
-    const result = await response.text();
-    alert(result);
 
+    showLoading(true);
+    try {
+      for(let i=0; i<ptacData.length; i++){
+        const row = ptacData[i];
+        const payload = {
+          user_id: currentUser.id,
+          session_no: row[0] || null,
+          date: row[1] || null,
+          start_time: row[2] || null,
+          end_time: row[3] || null,
+          duration: row[4] || null,
+          save_file_used: row[5] || null,
+          issue: (row[6] && row[6].toUpperCase()==="Y") ? true : false,
+          initial: row[7] || null
+        };
+        if(rowIds[i]) {
+          const { error } = await supabase.from("user_ptac").update(payload).eq("id", rowIds[i]);
+          if(error) showError(error.message);
+        } else {
+          const { data, error } = await supabase.from("user_ptac").insert([payload]);
+          if(error) showError(error.message);
+          else rowIds.push(data[0].id);
+        }
+      }
+      alert("PTAC saved successfully!");
+    } catch(err) {
+      showError(err.message);
+    }
+    showLoading(false);
+  }
+
+  // ------------------------------
+  // Logout
+  // ------------------------------
+  async function logoutUser() {
+    await supabase.auth.signOut();
+    currentUser = null;
+    ptacData = [];
+    rowIds = [];
     document.getElementById("dashboard").style.display = "none";
     document.getElementById("data").innerHTML = "";
-    currentSheet = "";
-    currentData = [];
-    currentUsername = "";
-
-  } catch(err) { showError("Logout failed: " + err.message); }
-  finally { showLoading(false); }
-}
+  }
 </script>
 
 </body>
