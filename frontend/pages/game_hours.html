@@ -1,19 +1,43 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Game Data Frontend</title>
+    <title>Game Data Frontend - Sheet 'a'</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { font-family: sans-serif; padding: 20px; }
-        table { border-collapse: collapse; width: 100%; margin-top: 15px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        .error { color: red; font-weight: bold; }
+        /* Basic Styles for Presentation */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            padding: 20px; 
+            background-color: #f4f4f9;
+        }
+        h1 { color: #333; }
+        table { 
+            border-collapse: collapse; 
+            width: 100%; 
+            margin-top: 20px; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            background-color: white;
+        }
+        th, td { 
+            border: 1px solid #ddd; 
+            padding: 12px; 
+            text-align: left; 
+        }
+        th { 
+            background-color: #007bff; 
+            color: white;
+        }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .error { color: #dc3545; font-weight: bold; }
+        .success { color: #28a745; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <h1>My Game Hours Tracker (Sheet 'a')</h1>
-    <p id="status">Attempting to load data...</p>
+    <h1>🎮 Game Hours Tracker Data</h1>
+    <h2>Source: Google Sheet "a" (Columns A, B, C)</h2>
+    <p id="status" class="success">Attempting to connect to Google Script API...</p>
+    
     <table id="gameTable">
         <thead>
             <tr>
@@ -33,45 +57,52 @@
         async function fetchGameData() {
             const statusElement = document.getElementById('status');
             const tableBody = document.querySelector('#gameTable tbody');
+            tableBody.innerHTML = '<tr><td colspan="3">Fetching data...</td></tr>';
             
             try {
+                // 1. Fetch data from the deployed Google Script URL
                 const response = await fetch(SCRIPT_URL);
                 const data = await response.json();
 
-                // 1. Check for the specific error object sent by the Apps Script
+                // Clear temporary loading message
+                tableBody.innerHTML = ''; 
+
+                // 2. Handle Server-Side Errors (e.g., sheet not found)
                 if (data.error) {
-                    statusElement.innerHTML = `<span class="error">Script Error: ${data.error}</span>`;
+                    statusElement.innerHTML = `<span class="error">API Error: ${data.error}</span>`;
+                    tableBody.innerHTML = `<tr><td colspan="3" class="error">${data.error}</td></tr>`;
                     return;
                 }
                 
-                // 2. CRITICAL FIX: Ensure the received data is an array before iterating
+                // 3. Handle Unexpected Data Format (The core fix for 'forEach is not a function')
                 if (!Array.isArray(data)) {
-                    statusElement.innerHTML = `<span class="error">Data Format Error: The server did not return a list.</span>`;
+                    statusElement.innerHTML = `<span class="error">Data Format Error: Expected an array of games.</span>`;
+                    tableBody.innerHTML = '<tr><td colspan="3" class="error">Received data was not in the expected list format.</td></tr>';
                     console.error("Received data was not an array:", data);
                     return; 
                 }
 
+                // 4. Data Processing and Display
                 if (data.length === 0) {
-                     statusElement.textContent = "Success, but the sheet is empty.";
+                     statusElement.textContent = "Success: The sheet is accessible but contains no game entries (data starts from row 2).";
+                     tableBody.innerHTML = '<tr><td colspan="3">No game data found in the sheet.</td></tr>';
                 } else {
                      statusElement.textContent = `Data loaded successfully! (${data.length} games found)`;
+                     
+                     // Insert data rows
+                     data.forEach(game => {
+                         const row = tableBody.insertRow();
+                         row.insertCell().textContent = game.gameTitle;
+                         row.insertCell().textContent = game.tier;
+                         row.insertCell().textContent = game.totalHours;
+                     });
                 }
 
-                // Clear any existing rows
-                tableBody.innerHTML = ''; 
-
-                // Insert data rows (This is now safe because we checked Array.isArray)
-                data.forEach(game => {
-                    const row = tableBody.insertRow();
-                    row.insertCell().textContent = game.gameTitle;
-                    row.insertCell().textContent = game.tier;
-                    row.insertCell().textContent = game.totalHours;
-                });
-
             } catch (error) {
-                // This catches network errors (e.g., wrong URL, CORS issues)
-                statusElement.innerHTML = `<span class="error">Network Fetch Failed: ${error.message}. Check your URL and deployment access settings.</span>`;
-                console.error('Fetch error:', error);
+                // 5. Handle Network/Client-Side Errors
+                statusElement.innerHTML = `<span class="error">Fetch Failed: ${error.message}. Check browser console for details.</span>`;
+                tableBody.innerHTML = '<tr><td colspan="3" class="error">Connection or Network Error.</td></tr>';
+                console.error('Network or Parse error:', error);
             }
         }
 
