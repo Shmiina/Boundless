@@ -4,21 +4,22 @@
     <title>Game Data Frontend</title>
     <style>
         body { font-family: sans-serif; padding: 20px; }
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        table { border-collapse: collapse; width: 100%; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
         th { background-color: #f2f2f2; }
+        .error { color: red; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <h1>My Game Hours Tracker</h1>
-    <p id="status">Loading data...</p>
+    <h1>My Game Hours Tracker (Sheet 'a')</h1>
+    <p id="status">Attempting to load data...</p>
     <table id="gameTable">
         <thead>
             <tr>
-                <th>Game Title</th>
-                <th>Tier</th>
-                <th>Total Hours</th>
+                <th>Game Title (A)</th>
+                <th>Tier (B)</th>
+                <th>Total Hours (C)</th>
             </tr>
         </thead>
         <tbody>
@@ -37,17 +38,29 @@
                 const response = await fetch(SCRIPT_URL);
                 const data = await response.json();
 
+                // 1. Check for the specific error object sent by the Apps Script
                 if (data.error) {
-                    statusElement.textContent = `Error: ${data.error}`;
+                    statusElement.innerHTML = `<span class="error">Script Error: ${data.error}</span>`;
                     return;
                 }
-
-                statusElement.textContent = `Data loaded successfully! (${data.length} games)`;
                 
+                // 2. CRITICAL FIX: Ensure the received data is an array before iterating
+                if (!Array.isArray(data)) {
+                    statusElement.innerHTML = `<span class="error">Data Format Error: The server did not return a list.</span>`;
+                    console.error("Received data was not an array:", data);
+                    return; 
+                }
+
+                if (data.length === 0) {
+                     statusElement.textContent = "Success, but the sheet is empty.";
+                } else {
+                     statusElement.textContent = `Data loaded successfully! (${data.length} games found)`;
+                }
+
                 // Clear any existing rows
                 tableBody.innerHTML = ''; 
 
-                // Insert data rows
+                // Insert data rows (This is now safe because we checked Array.isArray)
                 data.forEach(game => {
                     const row = tableBody.insertRow();
                     row.insertCell().textContent = game.gameTitle;
@@ -56,7 +69,8 @@
                 });
 
             } catch (error) {
-                statusElement.textContent = `Failed to fetch data: ${error.message}. Check your script URL and deployment settings.`;
+                // This catches network errors (e.g., wrong URL, CORS issues)
+                statusElement.innerHTML = `<span class="error">Network Fetch Failed: ${error.message}. Check your URL and deployment access settings.</span>`;
                 console.error('Fetch error:', error);
             }
         }
