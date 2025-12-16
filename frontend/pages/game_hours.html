@@ -4,71 +4,66 @@
 
 <script>
     // 1. Define the URL of your deployed Google Apps Script Web App
-    // **** REPLACE THIS WITH YOUR ACTUAL DEPLOYED WEB APP URL ****
     const WEB_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx0RGffOaH_8DgwrwektyUcyEptPt_cGhKWt7OeTKMhvJINeRqYNtBJXeUaB_BRZrXj/exec'; 
 
-    // 2. Function to fetch and display data
-    function loadGameData() {
+    // 2. This function is called by the Google Apps Script once the data is ready.
+    //    The name of this function (e.g., handleGameTime) is passed via the URL.
+    function handleGameTime(data) {
         const container = document.getElementById('game-data-container');
-        container.innerHTML = '<h2>Fetching latest data...</h2>'; // Update status
-
-        // Use the Fetch API to call the Web App URL
-        fetch(WEB_SCRIPT_URL)
-            .then(response => {
-                // Apps Script returns JSON. We check if the response is OK and parse it.
-                if (!response.ok) {
-                    throw new Error('Network response was not ok: ' + response.statusText);
-                }
-                return response.json();
-            })
-            .then(data => {
-                // 3. Data successfully received, now build the HTML table
-                
-                let htmlContent = '<h1>🎮 Aggregated Game Time Report</h1>';
-                
-                if (data.length === 0) {
-                    htmlContent += '<p>No valid game data found in the spreadsheet.</p>';
-                } else {
-                    htmlContent += `
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Game Title</th>
-                                    <th style="text-align: right;">Total Hours Rendered</th>
-                                </tr>
-                            </thead>
-                            <tbody>`;
-                    
-                    data.forEach(game => {
-                        htmlContent += `
-                            <tr>
-                                <td>${game.gameTitle}</td>
-                                <td class="hours">${game.totalHours}</td>
-                            </tr>`;
-                    });
-
-                    htmlContent += `</tbody></table>`;
-                }
-
-                // Insert the generated HTML into the container
-                container.innerHTML = htmlContent;
-            })
-            .catch(error => {
-                // 4. Handle any errors during the fetch or parsing process
-                console.error('Error fetching data from WebScript:', error);
-                container.innerHTML = '<p style="color: red;">Failed to load data. Please check the Web App URL and permissions.</p>';
+        let htmlContent = '<h1>🎮 Aggregated Game Time Report</h1>';
+        
+        if (data.length === 0) {
+            htmlContent += '<p>No valid game data found in the spreadsheet.</p>';
+        } else {
+            htmlContent += `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Game Title</th>
+                            <th style="text-align: right;">Total Hours Rendered</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+            
+            data.forEach(game => {
+                htmlContent += `
+                    <tr>
+                        <td>${game.gameTitle}</td>
+                        <td class="hours">${game.totalHours}</td>
+                    </tr>`;
             });
+
+            htmlContent += `</tbody></table>`;
+        }
+
+        container.innerHTML = htmlContent;
     }
 
-    // 5. Call the function when the page loads (i.e., when site is refreshed)
-    window.onload = loadGameData;
+    // 3. Function to dynamically create a script tag to load the data (JSONP)
+    function loadGameDataJSONP() {
+        const script = document.createElement('script');
+        
+        // Append the '?callback=handleGameTime' to the URL
+        // This tells the Apps Script which function to wrap the JSON in.
+        script.src = WEB_SCRIPT_URL + '?callback=handleGameTime'; 
+        
+        // This execution loads the script and runs the handleGameTime function
+        document.head.appendChild(script);
+        
+        // Optional: Clean up the script tag after it runs (for memory)
+        script.onload = function() {
+            this.remove();
+        };
+        script.onerror = function() {
+            document.getElementById('game-data-container').innerHTML = 
+                '<p style="color: red;">Failed to load data using JSONP. Check the Web App URL.</p>';
+        }
+    }
+
+    // 4. Call the JSONP function when the page loads
+    window.onload = loadGameDataJSONP;
 </script>
 
 <style>
-    /* Add the CSS to make the table look nice */
-    #game-data-container table { width: 100%; border-collapse: collapse; margin-top: 20px; background-color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    #game-data-container th, #game-data-container td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
-    #game-data-container th { background-color: #007bff; color: white; }
-    #game-data-container tr:hover { background-color: #f1f1f1; }
-    #game-data-container .hours { font-weight: bold; text-align: right; }
+    /* ... (Your CSS styles) ... */
 </style>
