@@ -1,118 +1,142 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <base target="_top">
-  <title>Aggregated Game Time by Tier</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; }
-    h1 { color: #333; border-bottom: 2px solid #ccc; padding-bottom: 10px; }
-    /* Style for the Tier Headings */
-    h2 { color: #007bff; margin-top: 30px; border-bottom: 1px solid #ddd; padding-bottom: 5px;}
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; background-color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
-    th { background-color: #007bff; color: white; }
-    tr:hover { background-color: #f1f1f1; }
-    .hours { font-weight: bold; text-align: right; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Data Lookup Interface</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f4f4f9; }
+        h1, h2 { color: #333; }
+        .container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        input[type="text"], select, button { padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px; width: 100%; box-sizing: border-box; }
+        button { background-color: #007bff; color: white; cursor: pointer; border: none; margin-top: 10px; }
+        button:hover { background-color: #0056b3; }
+        #results-container { margin-top: 20px; background-color: #e9ecef; padding: 15px; border-radius: 4px; white-space: pre-wrap; word-break: break-all; }
+        .result-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .result-table th, .result-table td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        .result-table th { background-color: #ddd; }
+    </style>
 </head>
 <body>
-  <div id="game-data-container">
-    <h1>🎮 Aggregated Game Time Report</h1>
-    <h2>Fetching latest data...</h2>
-  </div>
 
-  <script>
-    // *** REPLACE WITH YOUR ACTUAL DEPLOYED WEB APP URL ***
-    const WEB_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx0RGffOaH_8DgwrwektyUcyEptPt_cGhKWt7OeTKMhvJINeRqYNtBJXeUaB_BRZrXj/exec'; 
-    
-    // Define the order and list of tiers you want to display prominently
-    const DISPLAY_TIERS = [
-            'Tier 1.2', 
-            'Tier 2.1.1', 
-            'Tier 2.1.2', 
-            'Tier 2.2', 
-            'Tier 3'
-        ];
+    <h1>Game Data API Client</h1>
 
-    // Helper function to generate the HTML table structure
-    const generateTableHTML = (tierName, games) => {
-      if (!games || games.length === 0) return '';
-      
-      let tableHtml = `<h2>${tierName}</h2>`;
-      tableHtml += `
-        <table>
-          <thead>
-            <tr>
-              <th>Game Title</th>
-              <th style="text-align: right;">Total Hours Rendered</th>
-            </tr>
-          </thead>
-          <tbody>`;
-      
-      games.forEach(game => {
-        tableHtml += `
-          <tr>
-            <td>${game.gameTitle}</td>
-            <td class="hours">${game.totalHours}</td>
-          </tr>`;
-      });
+    <div class="container">
+        <h2>1. Game Title Lookup</h2>
+        <p>Enter a Game Title to find its duration in minutes.</p>
+        <input type="text" id="gameIdInput" placeholder="e.g., Rust or Baldurs Gate 3">
+        <button onclick="lookupGame()">Search Game</button>
+    </div>
 
-      tableHtml += `</tbody></table>`;
-      return tableHtml;
-    };
+    <div class="container">
+        <h2>2. Tier Leaderboard</h2>
+        <p>Select a Tier to view all games in that Tier, sorted by duration (descending).</p>
+        <select id="leaderboardTierSelect">
+            <option value="" disabled selected>Select a Tier</option>
+            <option value="Tier 1.2">Tier 1.2 (Example)</option>
+            <option value="Tier 2.1.2">Tier 2.1.2 (Example)</option>
+            <option value="Tier 3">Tier 3 (Example)</option>
+            </select>
+        <button onclick="showLeaderboard()">Show Leaderboard</button>
+    </div>
+
+    <div class="container">
+        <h2>Results</h2>
+        <div id="results-container">
+            Awaiting input...
+        </div>
+    </div>
+
+    <script>
+        // *** IMPORTANT: Replace this URL with your deployed Google Apps Script Web App URL ***
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx0RGffOaH_8DgwrwektyUcyEptPt_cGhKWt7OeTKMhvJINeRqYNtBJXeUaB_BRZrXj/exec'; 
         
-    // 1. JSONP Callback function
-    function handleGameTime(groupedData) {
-      const container = document.getElementById('game-data-container');
-      let htmlContent = '<h1>🎮 Aggregated Game Time Report</h1>';
-      let dataRendered = false;
-            
-            // Set of tiers already rendered (used to catch 'Other' tiers later)
-            const renderedTiers = new Set(); 
+        const resultsContainer = document.getElementById('results-container');
 
-      // A. Display all tiers defined in the fixed order
-      DISPLAY_TIERS.forEach(tier => {
-                const games = groupedData[tier];
-                
-                if (games) {
-                    htmlContent += generateTableHTML(tier, games);
-                    renderedTiers.add(tier);
-                    dataRendered = true;
-                }
-      });
+        // Function to make the API call and handle response
+        async function fetchData(url) {
+            resultsContainer.innerHTML = 'Loading...';
             
-            // B. Display any other tiers found in the spreadsheet (e.g., 'Tier 1' or 'Error Tier')
-      for (const tierName in groupedData) {
-                // If the tier name exists in the data but was NOT handled in the DISPLAY_TIERS loop
-                if (!renderedTiers.has(tierName)) {
-                    htmlContent += generateTableHTML(`Other Tier: ${tierName}`, groupedData[tierName]);
-                    dataRendered = true;
-                }
+            if (WEB_APP_URL === 'https://script.google.com/macros/s/AKfycbx0RGffOaH_8DgwrwektyUcyEptPt_cGhKWt7OeTKMhvJINeRqYNtBJXeUaB_BRZrXj/exec') {
+                resultsContainer.innerHTML = '<span style="color: red;">ERROR: Please update the WEB_APP_URL in the script with your deployed Google Apps Script URL.</span>';
+                return null;
             }
 
-      if (!dataRendered) {
-        htmlContent += '<p>No game data found in the spreadsheet or the tier structure is empty.</p>';
-      }
+            try {
+                const response = await fetch(url);
+                
+                // For 'Lookup Mode', the response is plain text (e.g., "1234.56 Minutes")
+                if (url.includes('?id=')) {
+                    return { type: 'text', data: await response.text() };
+                } 
+                // For 'Leaderboard Mode', the response is JSON
+                else if (url.includes('?leaderboard=')) {
+                    return { type: 'json', data: await response.json() };
+                }
+                
+            } catch (error) {
+                resultsContainer.innerHTML = `<span style="color: red;">Error fetching data: ${error.message}</span>`;
+                return null;
+            }
+        }
 
-      container.innerHTML = htmlContent;
-    }
+        // --- Lookup Mode Implementation ---
+        async function lookupGame() {
+            const gameTitle = document.getElementById('gameIdInput').value.trim();
+            if (!gameTitle) {
+                resultsContainer.innerHTML = 'Please enter a Game Title.';
+                return;
+            }
 
-    // 2. Function to dynamically create a script tag to load the data (JSONP)
-    function loadGameDataJSONP() {
-      const script = document.createElement('script');
-      // The callback name MUST match the function name (handleGameTime)
-      script.src = WEB_SCRIPT_URL + '?callback=handleGameTime'; 
-      
-      document.head.appendChild(script);
-      
-      script.onerror = function() {
-        document.getElementById('game-data-container').innerHTML = 
-          '<p style="color: red;">Failed to load data using JSONP. Please check the Web App URL and script.</p>';
-      }
-    }
+            const url = `${WEB_APP_URL}?id=${encodeURIComponent(gameTitle)}`;
+            const result = await fetchData(url);
+            
+            if (result && result.type === 'text') {
+                resultsContainer.innerHTML = `<strong>Game Lookup Result:</strong><br>${result.data}`;
+            }
+        }
 
-    // 3. Call the JSONP function when the page loads
-    window.onload = loadGameDataJSONP;
-  </script>
+        // --- Leaderboard Mode Implementation ---
+        async function showLeaderboard() {
+            const tierName = document.getElementById('leaderboardTierSelect').value;
+            if (!tierName) {
+                resultsContainer.innerHTML = 'Please select a Tier.';
+                return;
+            }
+
+            const url = `${WEB_APP_URL}?leaderboard=${encodeURIComponent(tierName)}`;
+            const result = await fetchData(url);
+
+            if (result && result.type === 'json') {
+                const players = result.data;
+                
+                if (players.length === 0) {
+                    resultsContainer.innerHTML = `No games found for Tier: <strong>${tierName}</strong>.`;
+                    return;
+                }
+
+                // Create a dynamic HTML table
+                let tableHtml = `<p><strong>Leaderboard for Tier: ${tierName}</strong> (${players.length} results)</p>`;
+                tableHtml += '<table class="result-table"><thead><tr><th>Rank</th><th>Game Title (ID)</th><th>Duration (Minutes)</th></tr></thead><tbody>';
+                
+                players.forEach((player, index) => {
+                    tableHtml += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${player.name}</td>
+                            <td>${player.hours.toFixed(2)}</td>
+                        </tr>
+                    `;
+                });
+
+                tableHtml += '</tbody></table>';
+                resultsContainer.innerHTML = tableHtml;
+
+            } else if (result) {
+                 // Fallback for non-JSON content in leaderboard mode (e.g., script error message)
+                resultsContainer.innerHTML = `<pre>${JSON.stringify(result.data, null, 2)}</pre>`;
+            }
+        }
+    </script>
 </body>
 </html>
