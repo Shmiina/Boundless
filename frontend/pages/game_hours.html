@@ -1,117 +1,68 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <base target="_top">
-  <title>Aggregated Game Time by Tier</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; }
-    h1 { color: #333; border-bottom: 2px solid #ccc; padding-bottom: 10px; }
-    /* Style for the Tier Headings */
-    h2 { color: #007bff; margin-top: 30px; border-bottom: 1px solid #ddd; padding-bottom: 5px;}
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; background-color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
-    th { background-color: #007bff; color: white; }
-    tr:hover { background-color: #f1f1f1; }
-    .hours { font-weight: bold; text-align: right; }
-  </style>
+    <title>Game Data Frontend</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
 </head>
 <body>
-  <div id="game-data-container">
-    <h1>🎮 Aggregated Game Time Report</h1>
-    <h2>Fetching latest data...</h2>
-  </div>
 
-  <script>
-    // *** REPLACE WITH YOUR ACTUAL DEPLOYED WEB APP URL ***
-    const WEB_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx0RGffOaH_8DgwrwektyUcyEptPt_cGhKWt7OeTKMhvJINeRqYNtBJXeUaB_BRZrXj/exec'; 
-    
-    // Define the order and list of tiers you want to display prominently
-    // The tiers listed here MUST EXACTLY MATCH the tier names in your spreadsheet (Column B).
-    const DISPLAY_TIERS = [
-            'Tier 1.2', 
-            'Tier 2.1.1', 
-            'Tier 2.1.2', 
-        ];
-
-    // Helper function to generate the HTML table structure
-    const generateTableHTML = (tierName, games) => {
-      if (!games || games.length === 0) return '';
-      
-      let tableHtml = `<h2>${tierName}</h2>`;
-      tableHtml += `
-        <table>
-          <thead>
+    <h1>My Game Hours Tracker</h1>
+    <p id="status">Loading data...</p>
+    <table id="gameTable">
+        <thead>
             <tr>
-              <th>Game Title</th>
-              <th style="text-align: right;">Total Hours Rendered</th>
+                <th>Game Title</th>
+                <th>Tier</th>
+                <th>Total Hours</th>
             </tr>
-          </thead>
-          <tbody>`;
-      
-      games.forEach(game => {
-        tableHtml += `
-          <tr>
-            <td>${game.gameTitle}</td>
-            <td class="hours">${game.totalHours}</td>
-          </tr>`;
-      });
+        </thead>
+        <tbody>
+            </tbody>
+    </table>
 
-      tableHtml += `</tbody></table>`;
-      return tableHtml;
-    };
-        
-    // 1. JSONP Callback function
-    function handleGameTime(groupedData) {
-      const container = document.getElementById('game-data-container');
-      let htmlContent = '<h1>🎮 Aggregated Game Time Report</h1>';
-      let dataRendered = false;
+    <script>
+        // *** 🛑 IMPORTANT: REPLACE THIS URL with your actual Deployed Web App URL 🛑 ***
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx0RGffOaH_8DgwrwektyUcyEptPt_cGhKWt7OeTKMhvJINeRqYNtBJXeUaB_BRZrXj/exec'; 
+
+        async function fetchGameData() {
+            const statusElement = document.getElementById('status');
+            const tableBody = document.querySelector('#gameTable tbody');
             
-            // Set of tiers already rendered (used to catch 'Other' tiers later)
-            const renderedTiers = new Set(); 
+            try {
+                const response = await fetch(SCRIPT_URL);
+                const data = await response.json();
 
-      // A. Display all tiers defined in the fixed order (Tier 1.2, 2.1.1, etc.)
-      DISPLAY_TIERS.forEach(tier => {
-                const games = groupedData[tier];
+                if (data.error) {
+                    statusElement.textContent = `Error: ${data.error}`;
+                    return;
+                }
+
+                statusElement.textContent = `Data loaded successfully! (${data.length} games)`;
                 
-                if (games) {
-                    htmlContent += generateTableHTML(tier, games);
-                    renderedTiers.add(tier);
-                    dataRendered = true;
-                }
-      });
-            
-            // B. Display any other tiers found in the spreadsheet data that weren't explicitly listed
-      for (const tierName in groupedData) {
-                // If the tier name exists in the data but was NOT handled in the DISPLAY_TIERS loop
-                if (!renderedTiers.has(tierName)) {
-                    htmlContent += generateTableHTML(`Other Tier: ${tierName}`, groupedData[tierName]);
-                    dataRendered = true;
-                }
+                // Clear any existing rows
+                tableBody.innerHTML = ''; 
+
+                // Insert data rows
+                data.forEach(game => {
+                    const row = tableBody.insertRow();
+                    row.insertCell().textContent = game.gameTitle;
+                    row.insertCell().textContent = game.tier;
+                    row.insertCell().textContent = game.totalHours;
+                });
+
+            } catch (error) {
+                statusElement.textContent = `Failed to fetch data: ${error.message}. Check your script URL and deployment settings.`;
+                console.error('Fetch error:', error);
             }
+        }
 
-      if (!dataRendered) {
-        htmlContent += '<p>No game data found in the spreadsheet or the tier structure is empty.</p>';
-      }
+        fetchGameData();
+    </script>
 
-      container.innerHTML = htmlContent;
-    }
-
-    // 2. Function to dynamically create a script tag to load the data (JSONP)
-    function loadGameDataJSONP() {
-      const script = document.createElement('script');
-      // The callback name MUST match the function name (handleGameTime)
-      script.src = WEB_SCRIPT_URL + '?callback=handleGameTime'; 
-      
-      document.head.appendChild(script);
-      
-      script.onerror = function() {
-        document.getElementById('game-data-container').innerHTML = 
-          '<p style="color: red;">Failed to load data using JSONP. Please check the Web App URL and script.</p>';
-      }
-    }
-
-    // 3. Call the JSONP function when the page loads
-    window.onload = loadGameDataJSONP;
-  </script>
 </body>
 </html>
